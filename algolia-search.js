@@ -1055,6 +1055,14 @@ if (typeof window.__toggleTypeCTAs === "function") {
   });
 
   return items.slice().sort(function (a, b) {
+    if (hasGeoSearch) {
+      var distA = typeof a.__geoDistance === "number" ? a.__geoDistance : Infinity;
+      var distB = typeof b.__geoDistance === "number" ? b.__geoDistance : Infinity;
+      if (distA !== distB) {
+        return distA - distB;
+      }
+    }
+
     if (!hasQuery) {
       var rankA = typeof a.ranking === "number" ? a.ranking : parseFloat(a.ranking) || 0;
       var rankB = typeof b.ranking === "number" ? b.ranking : parseFloat(b.ranking) || 0;
@@ -1072,14 +1080,6 @@ if (typeof window.__toggleTypeCTAs === "function") {
     var localDiff = (b.__localScore || 0) - (a.__localScore || 0);
     if (localDiff !== 0) {
       return localDiff;
-    }
-
-    if (hasGeoSearch) {
-      var distA = typeof a.__geoDistance === "number" ? a.__geoDistance : Infinity;
-      var distB = typeof b.__geoDistance === "number" ? b.__geoDistance : Infinity;
-      if (distA !== distB) {
-        return distA - distB;
-      }
     }
 
     if ((b.__networkBonus || 0) !== (a.__networkBonus || 0)) {
@@ -1516,6 +1516,14 @@ function sortHitsLikeMain(items, query) {
   });
 
   return items.slice().sort(function (a, b) {
+    if (hasGeoSearch) {
+      var distA = typeof a.__geoDistance === "number" ? a.__geoDistance : Infinity;
+      var distB = typeof b.__geoDistance === "number" ? b.__geoDistance : Infinity;
+      if (distA !== distB) {
+        return distA - distB;
+      }
+    }
+
     if (!hasQuery) {
       var rankA = typeof a.ranking === "number" ? a.ranking : parseFloat(a.ranking) || 0;
       var rankB = typeof b.ranking === "number" ? b.ranking : parseFloat(b.ranking) || 0;
@@ -1533,14 +1541,6 @@ function sortHitsLikeMain(items, query) {
     var localDiff = (b.__localScore || 0) - (a.__localScore || 0);
     if (localDiff !== 0) {
       return localDiff;
-    }
-
-    if (hasGeoSearch) {
-      var distA = typeof a.__geoDistance === "number" ? a.__geoDistance : Infinity;
-      var distB = typeof b.__geoDistance === "number" ? b.__geoDistance : Infinity;
-      if (distA !== distB) {
-        return distA - distB;
-      }
     }
 
     if ((b.__networkBonus || 0) !== (a.__networkBonus || 0)) {

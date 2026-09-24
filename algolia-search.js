@@ -160,6 +160,13 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
 
+    // les studios enfants stockent le taux dans percentage_invoice_reimbursed
+    function getReimbursement(hit) {
+      if (hit.reimbursment_percentage != null) return hit.reimbursment_percentage;
+      if (hit.percentage_invoice_reimbursed != null) return hit.percentage_invoice_reimbursed;
+      return "";
+    }
+
     function isTherapeutes(hit) {
       var t = (hit.type || "").trim().toLowerCase();
       return t === "thérapeutes" || t === "therapeutes";
@@ -962,6 +969,7 @@ if (typeof window.__toggleTypeCTAs === "function") {
     "is_remote",
     "is_at_home",
     "reimbursment_percentage",
+    "percentage_invoice_reimbursed", // studios enfants
     "city",
     "department_number",
     "mainjob",
@@ -1103,10 +1111,7 @@ if (typeof window.__toggleTypeCTAs === "function") {
             var isNetwork = !!hit.is_elsee_network; // vrai seulement si le record l’est
             var isRemote = !!hit.is_remote;
             var isAtHome = !!hit.is_at_home;
-            var reimbursement =
-              hit.reimbursment_percentage != null
-                ? hit.reimbursment_percentage
-                : "";
+            var reimbursement = getReimbursement(hit);
             var name = hit.name || "";
             var city = hit.city || "";
             var depNum = hit.department_number || "";
@@ -1374,7 +1379,7 @@ function buildCardHTML(hit) {
   var isNetwork = !!hit.is_elsee_network;
   var isRemote = !!hit.is_remote;
   var isAtHome = !!hit.is_at_home;
-  var reimbursement = hit.reimbursment_percentage != null ? hit.reimbursment_percentage : "";
+  var reimbursement = getReimbursement(hit);
   var name = hit.name || "";
   var city = hit.city || "";
   var depNum = hit.department_number || "";

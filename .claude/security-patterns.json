@@ -1,0 +1,11 @@
+{
+  "patterns": [
+    { "rule_name": "aws_access_key_prefix", "substrings": ["AKIA"], "reminder": "Préfixe de clé d'accès AWS. Aucun secret dans le code : Secret Manager ou secret GitHub d'environnement (dev_ops:standards/securite.md)." },
+    { "rule_name": "stripe_live_key", "substrings": ["sk_live_"], "reminder": "Clé secrète Stripe live. Elle vit dans Secret Manager, une par projet, lue par le proxy ffPrivateApiCall (D10). Jamais dans un bundle ni un dépôt." },
+    { "rule_name": "github_token", "substrings": ["ghp_", "github_pat_"], "reminder": "Jeton GitHub. Ne jamais l'écrire dans un fichier versionné, un log ou une observation ; le documenter, pas le manipuler (dev_ops CLAUDE.md § 3.4)." },
+    { "rule_name": "private_key_block", "substrings": ["-----BEGIN PRIVATE KEY", "-----BEGIN RSA PRIVATE KEY", "-----BEGIN OPENSSH PRIVATE KEY"], "reminder": "Clé privée en clair. Un compte de service se documente (où il vit, qui le lit), sa clé ne se copie nulle part." },
+    { "rule_name": "google_api_key", "regex": "AIza[0-9A-Za-z_-]{35}", "reminder": "Clé d'API Google. Vérifier qu'elle est restreinte et qu'elle n'a rien à faire dans un fichier versionné hors configuration client Firebase publique." },
+    { "rule_name": "sa_key_b64_in_repo", "substrings": ["GCP_SA_KEY_B64="], "reminder": "La clé du compte de service claude-debug vit dans la variable CONFIG de l'environnement, décodée en mémoire : jamais dans un fichier, un commit ni un affichage." },
+    { "rule_name": "memory_or_observations_pii", "regex": "(?i)(iban|passe?word|mot de passe|token|secret)\\s*[:=]", "paths": ["**/.claude/memory/**", "**/.claude/skill-observations/**"], "reminder": "Aucun secret, token ni donnée personnelle dans .claude/memory/ ni .claude/skill-observations/ (D21)." }
+  ]
+}

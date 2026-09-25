@@ -11,6 +11,12 @@
   "enabledPlugins": {
     "security-guidance@claude-plugins-official": true
   },
+  "permissions": {
+  "allow": [
+    "Bash(node scripts/gcp-read.mjs:*)",
+    "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)"
+  ]
+},
   "hooks": {
     "SessionStart": [
       {

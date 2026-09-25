@@ -2,7 +2,7 @@
 
 Scripts de fonctionnalités sur mesure du site public `www.elsee.care` (Webflow) : moteur de
 l'annuaire des partenaires (Algolia), recherche de la page d'accueil, script global, formulaire
-multi-étapes. Règles de travail : [`CLAUDE.md`](CLAUDE.md). Décision de cadrage : `dev_ops` D30.
+multi-étapes. Règles de travail : [`CLAUDE.md`](CLAUDE.md). Décision de cadrage : `dev_ops` D31.
 
 ## Déploiement
 

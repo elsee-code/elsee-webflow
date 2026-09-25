@@ -31,18 +31,18 @@ Si la tâche touche **plus d'un dépôt**, elle ne se traite pas ici : elle se p
 
 **Où aller** : `dev_ops:docs/RUNBOOK.md` (où on en est, comment on déploie, comment on revient
 en arrière) · `dev_ops:docs/WORKFLOW.md` (branches et promotion) · `dev_ops:standards/`
-(sécurité, stabilité, scalabilité) · `dev_ops:decisions/` (pourquoi, et D31 pour ce dépôt).
+(sécurité, stabilité, scalabilité) · `dev_ops:decisions/` (pourquoi, et D32 pour ce dépôt).
 
 ---
 
-## 1. Ce que ce dépôt est — un dépôt léger (décision D31)
+## 1. Ce que ce dépôt est — un dépôt léger (décision D32)
 
 Quelques scripts de fonctionnalités sur mesure pour le site public `www.elsee.care`, construit dans
 Webflow. **Rien ne se déploie depuis GitHub** : chaque fichier est un bloc de code personnalisé,
 **collé à la main** dans Webflow (réglages du site ou de la page, *Custom code*), puis le site est
 publié depuis Webflow. Merger ne met rien en ligne ; ne pas coller ne met rien en ligne non plus.
 
-D'où une stack réduite (D31) : pas d'environnement GitHub, pas de compte de service, pas de workflow
+D'où une stack réduite (D32) : pas d'environnement GitHub, pas de compte de service, pas de workflow
 de déploiement. Une CI d'hygiène, la stack Claude Code commune, et ce fichier.
 
 | Fichier | Ce qu'il fait | Où il est collé |
@@ -103,7 +103,7 @@ Préfixes de commit : `feat:` `fix:` `chore:` `docs:` `ci:`. Documentation en fr
 ## 4. La stack Claude Code du dépôt — décision D21
 
 Source unique : `dev_ops:claude/` ; copie dans `.claude/` par `dev_ops:claude/sync-stack.sh`
-(`--check` refuse une copie qui diverge). **Ne rien modifier dans `.claude/` sur place.** Stack allégée (D31) : `onboarding`, `paywalls`, `skill-creator` et `find-skills` ne sont pas copiés
+(`--check` refuse une copie qui diverge). **Ne rien modifier dans `.claude/` sur place.** Stack allégée (D32) : `onboarding`, `paywalls`, `skill-creator` et `find-skills` ne sont pas copiés
 (`dev_ops:claude/per-repo/elsee-webflow/.sync-exclude`) ; les skills CRO du site public restent, sous les
 garde-fous de D30. Directives
 permanentes (stop-slop, task-observer, mem, code-simplifier) injectées par le hook `SessionStart` ;

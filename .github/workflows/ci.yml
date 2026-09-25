@@ -1,6 +1,6 @@
 name: CI
 
-# Dépôt léger (dev_ops D31) : rien ne se déploie depuis GitHub, les scripts sont collés
+# Dépôt léger (dev_ops D32) : rien ne se déploie depuis GitHub, les scripts sont collés
 # à la main dans le code personnalisé de Webflow. La CI garde donc ce qu'on colle :
 # hygiène commune à la plateforme (dev_ops:standards — stabilité M5.1, sécurité M1.1 et
 # M1.3 ; scripts copiés de dev_ops:scripts/ci/) et syntaxe de chaque script.

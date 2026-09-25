@@ -1,6 +1,6 @@
 # Règles de sécurité propres à elsee-webflow (scripts du site Webflow)
 
-Tirées du `CLAUDE.md` de ce dépôt et de la fiche D31.
+Tirées du `CLAUDE.md` de ce dépôt et de la fiche D32.
 
 - **Le dépôt est public, et tout ce qu'il contient finit collé dans une page publique.** Signaler toute
   valeur qui n'est pas publique par construction : clé d'administration ou d'écriture Algolia, jeton

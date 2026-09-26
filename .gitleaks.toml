@@ -1,0 +1,15 @@
+# gitleaks — ce qui, dans ce dépôt, ressemble à un secret sans en être un.
+# Lu par le job d'hygiène de ci.yml (dev_ops:standards/securite.md M1.3). Règles par
+# défaut de gitleaks, plus les exceptions ci-dessous, chacune justifiée. Une exception
+# nouvelle se justifie ici, en PR ; jamais par un `--exclude` dans le workflow.
+#
+# Relevé du 2026-09-24 : 2 signalements, tous deux la clé de RECHERCHE Algolia.
+title = "elsee-webflow"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Clé de RECHERCHE Algolia (lecture seule sur les index publics) : faite pour le navigateur, comme dans webapp"
+regexTarget = "line"
+regexes = ['''ALGOLIA_SEARCH_KEY\s*=\s*"[0-9a-f]{32}"''']

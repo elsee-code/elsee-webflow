@@ -1,0 +1,36 @@
+name: CI
+
+# Dépôt léger (dev_ops D33) : rien ne se déploie depuis GitHub, les scripts sont collés
+# à la main dans le code personnalisé de Webflow. La CI garde donc ce qu'on colle :
+# hygiène commune à la plateforme (dev_ops:standards — stabilité M5.1, sécurité M1.1 et
+# M1.3 ; scripts copiés de dev_ops:scripts/ci/) et syntaxe de chaque script.
+# Un seul job, Node préinstallé sur le runner : une minute facturée par run (D25).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Hygiène et syntaxe
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Actions épinglées par SHA
+        run: bash scripts/ci/check-pinned-actions.sh
+      - name: Secrets de déploiement lus sous un environment
+        run: bash scripts/ci/check-secrets-scope.sh
+      - name: Installer gitleaks 8.30.1
+        run: |
+          set -euo pipefail
+          curl -sSfL -o /tmp/gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tgz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+      - name: Aucun secret dans l'arbre de travail (gitleaks, allowlist .gitleaks.toml)
+        run: /tmp/gitleaks dir . --config .gitleaks.toml --redact --no-banner --exit-code 1
+      - name: Chaque script se parse (node --check)
+        run: bash scripts/ci/check-js-syntax.sh

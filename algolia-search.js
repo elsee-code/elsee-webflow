@@ -146,6 +146,38 @@ window.addEventListener("DOMContentLoaded", function () {
       }
     }
 
+    // Cercle de la photo et sa pastille. Partenaire nouveau dans le réseau (network_new,
+    // calculé par le backend : un mois après l'entrée) : cercle et pastille « Nouveau
+    // partenaire » en rose ; sinon le logo elsee sur le cercle vert habituel.
+    function labelTagHTML(isNetwork, isNew) {
+      if (isNew) {
+        return '<div class="directory_card_label_tag is-new">Nouveau<br>partenaire</div>';
+      }
+      return (
+        '<div class="directory_card_label_tag" style="display:' +
+        (isNetwork ? "flex" : "none") +
+        ';">' +
+        '<img src="https://cdn.prod.website-files.com/64708634ac0bc7337aa7acd8/65a65b49a0e66151845cad61_mob_menu_logo_dark_green.svg" loading="lazy" alt="" class="directory_card_label_tag_logo">' +
+        "</div>"
+      );
+    }
+
+    // styles du « Nouveau partenaire », sur les variables du site Webflow (--pink…) ;
+    // display:block car Webflow met la pastille en flex, où le <br> ne couperait pas la ligne
+    function ensureNewPartnerCSS() {
+      if (document.getElementById("new-partner-style")) return;
+      var style = document.createElement("style");
+      style.id = "new-partner-style";
+      style.textContent =
+        ".directory_card_photo.is-new{border-style:solid;border-color:var(--pink)}" +
+        ".directory_card_label_tag.is-new{display:block;left:70%;right:auto;bottom:-6px;" +
+        "width:auto;height:auto;padding:3px 8px;border-radius:var(--m);" +
+        "background-color:var(--pink);color:var(--dark_green_op_90);" +
+        "font-size:var(--fontsize_xs);font-weight:600;line-height:1.15;" +
+        "text-align:center;white-space:nowrap}";
+      document.head.appendChild(style);
+    }
+
     function truncate(str, max) {
       if (!str) return "";
       return str.length > max ? str.slice(0, max) + "..." : str;
@@ -988,6 +1020,7 @@ if (typeof window.__toggleTypeCTAs === "function") {
     "short_desc",
     "show_search",
     "show_home",
+    "network_new",
     "type",
     "odoo_id" // <--- IMPORTANT
   ]
@@ -1043,6 +1076,7 @@ if (typeof window.__toggleTypeCTAs === "function") {
           item: function (hit, bindEvent) {
             var photoUrl = hit.photo_url || "";
             var isNetwork = !!hit.is_elsee_network; // vrai seulement si le record l’est
+            var isNew = hit.network_new === true;
             var isRemote = !!hit.is_remote;
             var isAtHome = !!hit.is_at_home;
             var reimbursement = getReimbursement(hit);
@@ -1113,14 +1147,11 @@ if (Therapeutes) {
               '<div class="directory_card_photo_container">' +
               '<div class="directory_card_photo' +
               (isNetwork ? " is-label" : "") +
+              (isNew ? " is-new" : "") +
               '" style="' +
               finalStyle +
               '">' +
-              '<div class="directory_card_label_tag" style="display:' +
-              (isNetwork ? "flex" : "none") +
-              ';">' +
-              '<img src="https://cdn.prod.website-files.com/64708634ac0bc7337aa7acd8/65a65b49a0e66151845cad61_mob_menu_logo_dark_green.svg" loading="lazy" alt="" class="directory_card_label_tag_logo">' +
-              "</div>" +
+              labelTagHTML(isNetwork, isNew) +
               "</div>" +
               "</div>";
 
@@ -1313,6 +1344,7 @@ partnerDetails2Html +
 function buildCardHTML(hit) {
   var photoUrl = hit.photo_url || "";
   var isNetwork = !!hit.is_elsee_network;
+  var isNew = hit.network_new === true;
   var isRemote = !!hit.is_remote;
   var isAtHome = !!hit.is_at_home;
   var reimbursement = getReimbursement(hit);
@@ -1340,14 +1372,13 @@ function buildCardHTML(hit) {
 
   var photoClasses = "directory_card_photo";
   if (isNetwork) photoClasses += " is-label";
+  if (isNew) photoClasses += " is-new";
   photoClasses += Therapeutes ? " is-cover" : " is-contain";
 
   var photoDiv =
     '<div class="directory_card_photo_container">' +
       '<div class="' + photoClasses + '" style="' + finalStyle + '">' +
-        '<div class="directory_card_label_tag" style="display:' + (isNetwork ? "flex" : "none") + ';">' +
-          '<img src="https://cdn.prod.website-files.com/64708634ac0bc7337aa7acd8/65a65b49a0e66151845cad61_mob_menu_logo_dark_green.svg" loading="lazy" alt="" class="directory_card_label_tag_logo">' +
-        "</div>" +
+        labelTagHTML(isNetwork, isNew) +
       "</div>" +
     "</div>";
 
@@ -1435,6 +1466,7 @@ function buildCardHTML(hit) {
 
 
     // 8. START ---------------------------------------------------------------
+    ensureNewPartnerCSS();
     search.start();
 // === Index direct (requêtes secondaires sans géoloc) ===
 var rawIndex = null;

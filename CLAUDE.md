@@ -66,7 +66,7 @@ Les emplacements exacts se lisent dans Webflow ; ce tableau se corrige dès qu'o
    `name`, `url`, `photo_url`, `short_desc`, `mainjob`, `jobs`, `specialities`, `prestations`,
    `city`, `department_number`, `_geoloc`, `is_remote`, `is_at_home`, `is_elsee_network`,
    `reimbursment_percentage`, `percentage_invoice_reimbursed`, `show_search`, `show_home`, `type`,
-   `odoo_id`, `name_search`. Renommer, retirer ou changer le type d'un de ces champs côté backend casse
+   `odoo_id`, `name_search`, `network_new`. Renommer, retirer ou changer le type d'un de ces champs côté backend casse
    le moteur du site **sans erreur visible**. Un changement de champ est donc une **tâche transverse** :
    une PR backend (qui écrit l'ancien et le nouveau champ) mergée d'abord, puis la PR ici, collée
    dans Webflow, puis le retrait de l'ancien champ.

@@ -101,7 +101,8 @@ window.addEventListener("DOMContentLoaded", function () {
     search.use(
       instantsearch.middlewares.createInsightsMiddleware({
         insightsClient: loadSearchInsights(),
-        insightsInitParams: { useCookie: false, userToken: INSIGHTS_USER_TOKEN }
+        insightsInitParams: { useCookie: false, userToken: INSIGHTS_USER_TOKEN },
+        onEvent: sendInsightsEvent
       })
     );
 
@@ -121,6 +122,16 @@ window.addEventListener("DOMContentLoaded", function () {
         document.head.appendChild(script);
       }
       return window.aa;
+    }
+
+    // Un clic part par sendEvents : clickedObjectIDsAfterSearch garderait en localStorage
+    // la correspondance fiche → recherche (cache utile aux seules conversions).
+    function sendInsightsEvent(event, aa) {
+      if (event.eventType === "click") {
+        aa("sendEvents", [Object.assign({ eventType: "click" }, event.payload)]);
+      } else if (event.insightsMethod) {
+        aa(event.insightsMethod, event.payload);
+      }
     }
 
     function truncate(str, max) {

@@ -8,6 +8,15 @@ window.addEventListener("DOMContentLoaded", function () {
   var ALGOLIA_SEARCH_KEY = "137b70e88a3288926c97a689cdcf4048";
   var ALGOLIA_INDEX_NAME = "elsee_index";
 
+  // Algolia Insights (clics et vues des cartes)
+  var SEARCH_INSIGHTS_URL =
+    "https://cdn.jsdelivr.net/npm/search-insights@2.17.3/dist/search-insights.min.js";
+  var SEARCH_INSIGHTS_SRI =
+    "sha384-puGTibgj5tll4rKBSZMNWXFBG+MuObLcSQE3VnZ/PbPozbHGK7qhg0CFKG9FBUjZ";
+  // jeton anonyme tiré à chaque chargement de page et gardé en mémoire : aucun cookie
+  var INSIGHTS_USER_TOKEN =
+    "anonymous-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+
   // placeholders
   var THERAPIST_PLACEHOLDER_URL =
     "https://cdn.prod.website-files.com/64708634ac0bc7337aa7acd8/690dd36e1367cf7f0391812d_Fichier%20Convertio%20(3).webp";
@@ -85,7 +94,35 @@ window.addEventListener("DOMContentLoaded", function () {
 
     searchInstance = search;
 
+    // 3.2 événements Insights (vues et clics des cartes), envoyés par le middleware.
+    // Le middleware d'InstantSearch 4.27 n'envoie rien tant que la recherche n'a pas de
+    // userToken, et search-insights sans cookie n'en crée qu'au premier envoi : on fournit
+    // donc le jeton nous-mêmes, à l'init et dans le widget configure.
+    search.use(
+      instantsearch.middlewares.createInsightsMiddleware({
+        insightsClient: loadSearchInsights(),
+        insightsInitParams: { useCookie: false, userToken: INSIGHTS_USER_TOKEN }
+      })
+    );
+
     // 4. UTILS ----------------------------------------------------------------
+    // file d'attente window.aa (snippet Algolia), puis chargement asynchrone de search-insights
+    function loadSearchInsights() {
+      if (!window.aa) {
+        window.AlgoliaAnalyticsObject = "aa";
+        window.aa = function () {
+          (window.aa.queue = window.aa.queue || []).push(arguments);
+        };
+        var script = document.createElement("script");
+        script.src = SEARCH_INSIGHTS_URL;
+        script.integrity = SEARCH_INSIGHTS_SRI;
+        script.crossOrigin = "anonymous";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      return window.aa;
+    }
+
     function truncate(str, max) {
       if (!str) return "";
       return str.length > max ? str.slice(0, max) + "..." : str;
@@ -95,60 +132,6 @@ window.addEventListener("DOMContentLoaded", function () {
       if (!v) return [];
       if (Array.isArray(v)) return v;
       return [v];
-    }
-
-    function haversineDistanceMeters(origin, target) {
-      if (
-        !origin ||
-        typeof origin.lat !== "number" ||
-        typeof origin.lng !== "number" ||
-        !target ||
-        typeof target.lat !== "number" ||
-        typeof target.lng !== "number"
-      ) {
-        return null;
-      }
-
-      var R = 6371000; // rayon terrestre moyen en mètres
-      var dLat = ((target.lat - origin.lat) * Math.PI) / 180;
-      var dLon = ((target.lng - origin.lng) * Math.PI) / 180;
-      var lat1 = (origin.lat * Math.PI) / 180;
-      var lat2 = (target.lat * Math.PI) / 180;
-
-      var a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1) * Math.cos(lat2) *
-          Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      return R * c;
-    }
-
-    function getHitGeoDistance(hit) {
-      if (!hit || !currentGeoFilter || !currentGeoFilter.lat || !currentGeoFilter.lng) {
-        return null;
-      }
-
-      if (
-        hit._rankingInfo &&
-        hit._rankingInfo.matchedGeoLocation &&
-        typeof hit._rankingInfo.matchedGeoLocation.distance === "number"
-      ) {
-        return hit._rankingInfo.matchedGeoLocation.distance;
-      }
-
-      if (hit._rankingInfo && typeof hit._rankingInfo.geoDistance === "number") {
-        return hit._rankingInfo.geoDistance;
-      }
-
-      if (hit._geoloc && typeof hit._geoloc.lat === "number" && typeof hit._geoloc.lng === "number") {
-        return haversineDistanceMeters(
-          { lat: currentGeoFilter.lat, lng: currentGeoFilter.lng },
-          hit._geoloc
-        );
-      }
-
-      return null;
     }
 
     function isMobileDevice() {
@@ -959,10 +942,19 @@ if (typeof window.__toggleTypeCTAs === "function") {
         facets: ["specialities", "prestations", "mainjob", "jobs"],
         disjunctiveFacets: ["type", "reimbursment_percentage"],
         hitsPerPage: 48,
-        getRankingInfo: true,
+        // Géoloc : distances regroupées par tranches ; à l'intérieur d'une tranche,
+        // les critères suivants du classement de l'index départagent (réseau, ranking…).
+        // Sans aroundLatLng, Algolia ignore ce paramètre.
+        aroundPrecision: [
+          { from: 0, value: 2000 },
+          { from: 2000, value: 3000 },
+          { from: 5000, value: 5000 },
+          { from: 10000, value: 15000 },
+          { from: 25000, value: 25000 }
+        ],
+        userToken: INSIGHTS_USER_TOKEN, // dès la 1re recherche, cf. 3.2
         attributesToRetrieve: [
           "name",
-          "name_search",
           "url",
           "photo_url",
     "is_elsee_network",
@@ -979,7 +971,6 @@ if (typeof window.__toggleTypeCTAs === "function") {
     "short_desc",
     "show_search",
     "show_home",
-    "ranking",
     "type",
     "odoo_id" // <--- IMPORTANT
   ]
@@ -1016,19 +1007,8 @@ if (typeof window.__toggleTypeCTAs === "function") {
         cssClasses: {
           loadMore: "directory_show_more_button"
         },
+        // l'ordre affiché est celui d'Algolia (réglages de l'index) : aucun re-tri ici
         transformItems: function (items) {
-  var query = "";
-  if (searchInstance && searchInstance.helper && searchInstance.helper.state) {
-    query = (searchInstance.helper.state.query || "").trim().toLowerCase();
-  }
-
-  var hasGeoSearch = !!(
-    currentGeoFilter &&
-    typeof currentGeoFilter.lat === "number" &&
-    typeof currentGeoFilter.lng === "number"
-  );
-  var hasQuery = query.length > 0;
-
   // === MAJ de l'ensemble des odoo_id du bloc principal ===
   mainHitOdooSet.clear();
   items.forEach(function (hit) {
@@ -1038,75 +1018,12 @@ if (typeof window.__toggleTypeCTAs === "function") {
   });
   console.log("[DEDUPE] mainHitOdooSet (from transformItems) =", Array.from(mainHitOdooSet));
 
-  // scoring local / tri
-  items.forEach(function (hit) {
-    var nameForSearch =
-      (hit.name_search || hit.name || "").toString().toLowerCase();
-    var score = 0;
-
-    hit.__geoDistance = getHitGeoDistance(hit);
-
-    if (query) {
-      if (nameForSearch === query) {
-        score = 3;
-      } else if (nameForSearch.indexOf(query) === 0) {
-        score = 2;
-      } else if (nameForSearch.indexOf(query) !== -1) {
-        score = 1;
-      }
-    }
-
-    var networkBonus = hit.is_elsee_network ? 1 : 0;
-
-    hit.__localScore = score;
-    hit.__networkBonus = networkBonus;
-  });
-
-  return items.slice().sort(function (a, b) {
-    if (hasGeoSearch) {
-      var distA = typeof a.__geoDistance === "number" ? a.__geoDistance : Infinity;
-      var distB = typeof b.__geoDistance === "number" ? b.__geoDistance : Infinity;
-      if (distA !== distB) {
-        return distA - distB;
-      }
-    }
-
-    if (!hasQuery) {
-      var rankA = typeof a.ranking === "number" ? a.ranking : parseFloat(a.ranking) || 0;
-      var rankB = typeof b.ranking === "number" ? b.ranking : parseFloat(b.ranking) || 0;
-      if (rankA !== rankB) return rankB - rankA;
-      if ((b.__networkBonus || 0) !== (a.__networkBonus || 0)) {
-        return (b.__networkBonus || 0) - (a.__networkBonus || 0);
-      }
-      var nameA = (a.name || "").toString().toLowerCase();
-      var nameB = (b.name || "").toString().toLowerCase();
-      if (nameA < nameB) return -1;
-      if (nameA > nameB) return 1;
-      return 0;
-    }
-
-    var localDiff = (b.__localScore || 0) - (a.__localScore || 0);
-    if (localDiff !== 0) {
-      return localDiff;
-    }
-
-    if ((b.__networkBonus || 0) !== (a.__networkBonus || 0)) {
-      return (b.__networkBonus || 0) - (a.__networkBonus || 0);
-    }
-    var rankA = typeof a.ranking === "number" ? a.ranking : parseFloat(a.ranking) || 0;
-    var rankB = typeof b.ranking === "number" ? b.ranking : parseFloat(b.ranking) || 0;
-    if (rankA !== rankB) return rankB - rankA;
-    var nameSearchA = (a.name_search || "").toString().toLowerCase();
-    var nameSearchB = (b.name_search || "").toString().toLowerCase();
-    if (nameSearchA < nameSearchB) return -1;
-    if (nameSearchA > nameSearchB) return 1;
-    return 0;
-  });
+  return items;
 },
 
 
         templates: {
-          item: function (hit) {
+          item: function (hit, bindEvent) {
             var photoUrl = hit.photo_url || "";
             var isNetwork = !!hit.is_elsee_network; // vrai seulement si le record l’est
             var isRemote = !!hit.is_remote;
@@ -1343,7 +1260,9 @@ if (extraCount > 0) {
               "</div>";
 
             return (
-              '<li class="directory_card_container">' +
+              '<li class="directory_card_container" ' +
+              bindEvent("click", hit, "Partner Card Clicked") +
+              ">" +
               '<a href="' +
               url +
               '" class="directory_card_body">' +
@@ -1497,70 +1416,6 @@ function buildCardHTML(hit) {
 
 
 
-// === Tri identique à transformItems principal ===
-function sortHitsLikeMain(items, query) {
-  var q = (query || "").trim().toLowerCase();
-  var hasGeoSearch = !!(
-    currentGeoFilter &&
-    typeof currentGeoFilter.lat === "number" &&
-    typeof currentGeoFilter.lng === "number"
-  );
-  var hasQuery = q.length > 0;
-  items.forEach(function (hit) {
-    var nameForSearch =
-      (hit.name_search || hit.name || "").toString().toLowerCase();
-    var score = 0;
-    hit.__geoDistance = getHitGeoDistance(hit);
-    if (q) {
-      if (nameForSearch === q) score = 3;
-      else if (nameForSearch.indexOf(q) === 0) score = 2;
-      else if (nameForSearch.indexOf(q) !== -1) score = 1;
-    }
-    hit.__localScore = score;
-    hit.__networkBonus = hit.is_elsee_network ? 1 : 0;
-  });
-
-  return items.slice().sort(function (a, b) {
-    if (hasGeoSearch) {
-      var distA = typeof a.__geoDistance === "number" ? a.__geoDistance : Infinity;
-      var distB = typeof b.__geoDistance === "number" ? b.__geoDistance : Infinity;
-      if (distA !== distB) {
-        return distA - distB;
-      }
-    }
-
-    if (!hasQuery) {
-      var rankA = typeof a.ranking === "number" ? a.ranking : parseFloat(a.ranking) || 0;
-      var rankB = typeof b.ranking === "number" ? b.ranking : parseFloat(b.ranking) || 0;
-      if (rankA !== rankB) return rankB - rankA;
-      if ((b.__networkBonus || 0) !== (a.__networkBonus || 0)) {
-        return (b.__networkBonus || 0) - (a.__networkBonus || 0);
-      }
-      var nameA = (a.name || "").toString().toLowerCase();
-      var nameB = (b.name || "").toString().toLowerCase();
-      if (nameA < nameB) return -1;
-      if (nameA > nameB) return 1;
-      return 0;
-    }
-
-    var localDiff = (b.__localScore || 0) - (a.__localScore || 0);
-    if (localDiff !== 0) {
-      return localDiff;
-    }
-
-    if ((b.__networkBonus || 0) !== (a.__networkBonus || 0)) {
-      return (b.__networkBonus || 0) - (a.__networkBonus || 0);
-    }
-    var rankA = typeof a.ranking === "number" ? a.ranking : parseFloat(a.ranking) || 0;
-    var rankB = typeof b.ranking === "number" ? b.ranking : parseFloat(b.ranking) || 0;
-    if (rankA !== rankB) return rankB - rankA;
-    var nameSearchA = (a.name_search || "").toString().toLowerCase();
-    var nameSearchB = (b.name_search || "").toString().toLowerCase();
-    if (nameSearchA < nameSearchB) return -1;
-    if (nameSearchA > nameSearchB) return 1;
-    return 0;
-  });
-}
 
     // 8. START ---------------------------------------------------------------
     search.start();
@@ -1767,12 +1622,6 @@ function renderInto(containerId, hits, opts) {
   var typeFacetValue = opts.typeFacetValue || ""; // ex: "Thérapeutes", "Marques", "Applications & Programmes"
   var label = (opts.label || typeFacetValue || "").toLowerCase(); // pour le texte
 
-  var query =
-    (searchInstance &&
-      searchInstance.helper &&
-      searchInstance.helper.state &&
-      searchInstance.helper.state.query) || "";
-
   // Retire les hits déjà présents dans le bloc principal (on compare href ET pathname)
     // Retire les hits déjà présents dans le bloc principal (on compare par odoo_id)
   var pruned = (hits || []).filter(function (hit) {
@@ -1792,10 +1641,8 @@ function renderInto(containerId, hits, opts) {
 
 
 
-  var sorted = sortHitsLikeMain(pruned, query);
-
-  // on limite à 5
-  var visible = sorted.slice(0, 5);
+  // ordre d'Algolia conservé : on limite à 5
+  var visible = pruned.slice(0, 5);
 
   // liste HTML : <ol> -> <li class="ais-InfiniteHits-item"><div class="directory_card_container">…</div></li>
   var itemsHtml = visible

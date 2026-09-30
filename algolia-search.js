@@ -26,7 +26,6 @@ window.addEventListener("DOMContentLoaded", function () {
   // 2. ÉTAT GLOBAL -----------------------------------------------------------
   var selectedFacetTags = new Set();
   var selectedJobTags = [];
-  var isNetworkSelected = true;
   var isRemoteSelected = false;
   var isAtHomeSelected = false;
   var speExpanded = false;
@@ -67,7 +66,6 @@ window.addEventListener("DOMContentLoaded", function () {
   var userHasFilters =
     selectedFacetTags.size > 0 ||
     selectedJobTags.length > 0 ||
-    isNetworkSelected ||
     isRemoteSelected ||
     isAtHomeSelected ||
     currentGeoFilter;
@@ -301,9 +299,10 @@ window.addEventListener("DOMContentLoaded", function () {
         parts.push(jobParts.join(" AND "));
       }
 
-      if (isNetworkSelected) {
-        parts.push("is_elsee_network:true");
-      }
+      // Plus de filtre is_elsee_network : l'index ne contient que des partenaires du réseau.
+      // D17 point 2 : « La condition est `partner_in_network === true`, pour toutes les entités… »
+      // D35 point 1 : « Pour `users_display`, le prédicat d'éligibilité est
+      // `partner_in_network === true` et `elsee_stage_id.id !== 19`, et rien d'autre. »
       if (isRemoteSelected) {
         parts.push("is_remote:true");
       }
@@ -400,8 +399,7 @@ function getVisibilityFilter(ignoreGeo) {
         params.delete("geolabel");
       }
 
-      if (isNetworkSelected) params.set("network", "true");
-      else params.delete("network");
+      params.delete("network"); // nettoie les anciens liens ?network=true (filtre réseau retiré)
 
       if (isRemoteSelected) params.set("remote", "true");
       else params.delete("remote");
@@ -793,16 +791,10 @@ if (typeof window.__toggleTypeCTAs === "function") {
         }
 
         // BOOLÉENS -------------------------------------------------------------
+        // ancien bouton « Membres réseaux » : tout l'annuaire est dans le réseau
         if (labelFilterWrapper) {
-          labelFilterWrapper.innerHTML =
-            '<div class="directory_category_tag_wrapper ' +
-            (isNetworkSelected ? "is-selected" : "") +
-            '" data-bool-filter="network">' +
-            '<span class="directory_option_icon">' +
-            '<svg width="auto" height="auto" viewBox="0 0 25 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.984 17.5351L23.8018 17.3529C23.644 17.1937 23.3902 17.178 23.2152 17.32C21.8196 18.4516 20.2132 19.0167 18.393 19.0167C16.8483 19.0167 15.5201 18.509 14.41 17.4921C13.3973 16.567 12.6558 15.3435 12.1825 13.8231C12.1065 13.5778 12.2556 13.3197 12.5052 13.2594C14.4272 12.8062 16.091 12.34 17.498 11.8624C19.0155 11.3475 20.249 10.7853 21.1971 10.1757C22.1466 9.56609 22.8451 8.89483 23.2912 8.16333C23.7387 7.4304 23.9624 6.63149 23.9624 5.76517C23.9624 4.30074 23.3385 3.12891 22.0921 2.24824C20.8457 1.36758 19.2063 0.927246 17.1739 0.927246C15.7094 0.927246 14.354 1.17825 13.1076 1.67882C11.8612 2.18083 10.7912 2.87791 9.89618 3.77292C9.00261 4.66792 8.29693 5.72358 7.78345 6.94274C7.26853 8.16333 7.01035 9.4915 7.01035 10.9272V10.933C7.01035 11.2055 7.26136 11.4092 7.53101 11.3618C8.78459 11.1395 10.0511 10.9287 11.2344 10.6533C11.4381 10.606 11.5786 10.4195 11.5729 10.2101C11.5672 10.0451 11.5643 9.87733 11.5643 9.70809C11.5643 8.5965 11.6919 7.59391 11.9501 6.6989C12.2069 5.80533 12.5654 5.03224 13.0273 4.3825C13.4877 3.73132 14.0356 3.23075 14.6739 2.87791C15.3093 2.5265 16.0078 2.35008 16.7665 2.35008C17.716 2.35008 18.4604 2.62116 19.0026 3.16333C19.5448 3.7055 19.8159 4.42266 19.8159 5.31767C19.8159 7.31709 18.601 8.98089 16.1742 10.3091C16.1612 10.3162 16.1498 10.3248 16.1383 10.3334C15.8055 10.5715 15.1242 10.8986 13.9237 11.3432C13.8334 11.3762 13.7387 11.4063 13.6469 11.4393L13.6426 11.4422C13.5824 11.4637 13.5207 11.4823 13.4604 11.5024C13.4203 11.5167 13.3801 11.5297 13.34 11.5426C12.9613 11.6673 12.5812 11.7835 12.2011 11.8882C12.0448 11.9341 11.8884 11.98 11.7264 12.0245L11.7249 12.0159C6.89131 13.2451 2.14661 12.9338 0.111328 12.7072C1.45671 13.1705 5.65063 13.661 7.08494 13.8217C9.05711 17.3773 11.963 19.7755 13.1693 20.2359C15.6549 20.9272 19.8288 20.6633 21.0766 20.1341C22.1853 19.6651 23.1549 19.0067 23.9854 18.1605Z" fill="currentColor"></path></svg>' +
-            "</span>" +
-            "<span>Membres réseaux</span>" +
-            "</div>";
+          labelFilterWrapper.innerHTML = "";
+          labelFilterWrapper.style.display = "none";
         }
 
         // filtres visio / domicile → seulement si aucun type OU thérapeutes
@@ -1498,7 +1490,7 @@ function buildFacetFiltersFor(label) {
 
 
 function makeFiltersString(extra, ignoreGeo) {
-  // jobs + booléens (network / remote / athome)
+  // jobs + booléens (remote / athome)
   var userFilters = buildFiltersStringFromJobsAndBooleans();
   var visibility  = getVisibilityFilter(!!ignoreGeo);
 
@@ -1603,10 +1595,7 @@ function buildMoreUrlForType(typeFacetValue) {
     params.delete("jobs");
   }
 
-  // --- Booléens (network / remote / athome) --------------------
-  if (isNetworkSelected) params.set("network", "true");
-  else params.delete("network");
-
+  // --- Booléens (remote / athome) ------------------------------
   if (isRemoteSelected) params.set("remote", "true");
   else params.delete("remote");
 
@@ -1628,7 +1617,6 @@ function buildMoreUrlForType(typeFacetValue) {
     prestaRef: prestaRef,
     reimbRef: reimbRef,
     jobs: (selectedJobTags || []).slice(),
-    isNetworkSelected: isNetworkSelected,
     isRemoteSelected: isRemoteSelected,
     isAtHomeSelected: isAtHomeSelected,
     finalUrl: finalUrl
@@ -1974,7 +1962,6 @@ async function fetchAndRenderMoreBlocks() {
 
         selectedFacetTags.clear();
         selectedJobTags.length = 0;
-        isNetworkSelected = false;
         isRemoteSelected = false;
         isAtHomeSelected = false;
         helper.setQuery("");
@@ -2005,7 +1992,6 @@ async function fetchAndRenderMoreBlocks() {
 
     // 12. FONCTIONS DE SETUP --------------------------------------------------
     function setupBooleanBlockClicks() {
-      var labelFilterWrapper = document.getElementById("label-filter");
       var remoteFilterWrapper = document.getElementById(
         "works-remotely-filter"
       );
@@ -2015,9 +2001,6 @@ async function fetchAndRenderMoreBlocks() {
 
       function toggleAndSearch(flagName) {
         if (!searchInstance || !searchInstance.helper) return;
-        if (flagName === "network") {
-          isNetworkSelected = !isNetworkSelected;
-        }
         if (flagName === "remote") {
           isRemoteSelected = !isRemoteSelected;
         }
@@ -2031,14 +2014,6 @@ async function fetchAndRenderMoreBlocks() {
         helper.search();
       }
 
-      if (labelFilterWrapper) {
-        labelFilterWrapper.addEventListener("click", function (e) {
-          var btn = e.target.closest("[data-bool-filter]");
-          if (!btn) return;
-          var flagName = btn.getAttribute("data-bool-filter");
-          toggleAndSearch(flagName);
-        });
-      }
       if (remoteFilterWrapper) {
         remoteFilterWrapper.addEventListener("click", function (e) {
           var btn = e.target.closest("[data-bool-filter]");
@@ -2216,8 +2191,7 @@ async function fetchAndRenderMoreBlocks() {
       var hasFacets = selectedFacetTags.size > 0;
       var hasGeo = !!currentGeoFilter;
       var hasJobs = selectedJobTags.length > 0;
-      var hasBools =
-        isNetworkSelected || isRemoteSelected || isAtHomeSelected;
+      var hasBools = isRemoteSelected || isAtHomeSelected;
 
       clearBtn.style.display =
         hasQuery || hasFacets || hasGeo || hasJobs || hasBools
@@ -2233,7 +2207,6 @@ async function fetchAndRenderMoreBlocks() {
 
         selectedFacetTags.clear();
         selectedJobTags.length = 0;
-        isNetworkSelected = false;
         isRemoteSelected = false;
         isAtHomeSelected = false;
         helper.setQuery("");
@@ -2385,16 +2358,6 @@ async function fetchAndRenderMoreBlocks() {
         });
       });
 
-      if (isNetworkSelected) {
-        addTag({
-          key: "bool:::network",
-          facetName: "network",
-          value: "true",
-          label: "Membre réseau elsee",
-          type: "boolean"
-        });
-      }
-
       if (isRemoteSelected) {
         addTag({
           key: "bool:::remote",
@@ -2455,7 +2418,6 @@ async function fetchAndRenderMoreBlocks() {
       var key = tagEl.getAttribute("data-tag-key") || facetName + ":::" + facetValue;
 
       if (tagType === "boolean") {
-        if (facetName === "network") isNetworkSelected = false;
         if (facetName === "remote") isRemoteSelected = false;
         if (facetName === "athome") isAtHomeSelected = false;
 
@@ -2782,8 +2744,6 @@ async function fetchAndRenderMoreBlocks() {
         .split(",")
         .filter(Boolean);
       var geolabel = params.get("geolabel") || "";
-      var hasNetworkParam = params.has("network");
-      var urlNetwork = params.get("network") === "true";
       var urlRemote = params.get("remote") === "true";
       var urlAtHome = params.get("athome") === "true";
 
@@ -2834,9 +2794,6 @@ async function fetchAndRenderMoreBlocks() {
         }
       });
 
-      if (hasNetworkParam) {
-        isNetworkSelected = urlNetwork;
-      }
       isRemoteSelected = urlRemote;
       isAtHomeSelected = urlAtHome;
 

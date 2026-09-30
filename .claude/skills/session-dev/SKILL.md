@@ -127,7 +127,8 @@ Ce que la session fait, dans tous les modes :
 Le message « Livré » contient exactement ces cinq blocs :
 
 1. **Ce qui change**, en deux ou trois lignes.
-2. **Où recetter** : l'URL exacte (table ci-dessous). Une livraison sans URL n'est pas une livraison.
+2. **Où recetter** : l'URL exacte (table ci-dessous), **complète : domaine et slug** de l'écran ou de la
+   page (route de l'app, slug Webflow), jamais le seul domaine. Une livraison sans URL n'est pas une livraison.
 3. **Le journal de recette** (format ci-dessous), copié aussi dans la description de la PR.
 4. **Ce que j'ai vérifié** : contrôles joués, date, captures.
 5. **La question** : GO ou NO GO.
@@ -142,7 +143,7 @@ Deux tableaux, rien d'autre. L'humain coche le premier ; un NO GO cite le numér
 écran, fonction ou parcours **voisin** touché par le diff (la non-régression), puis une ligne par
 environnement quand ils diffèrent (staging seul, ou staging puis preprod).
 
-| # | Où (URL ou écran) | Action | Attendu | Coché |
+| # | Où (URL complète, slug compris) | Action | Attendu | Coché |
 |---|---|---|---|---|
 | 1 | … | … | … | ☐ |
 

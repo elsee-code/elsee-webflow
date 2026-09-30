@@ -124,13 +124,27 @@ window.addEventListener("DOMContentLoaded", function () {
       return window.aa;
     }
 
-    // Un clic part par sendEvents : clickedObjectIDsAfterSearch garderait en localStorage
-    // la correspondance fiche → recherche (cache utile aux seules conversions).
+    // Vues et clics partent par sendEvents :
+    // - l'API Insights refuse (422) un événement de plus de 20 objectIDs, or InstantSearch 4.27
+    //   envoie la vue d'une page entière (48 cartes) : on la découpe par 20, en une requête ;
+    // - clickedObjectIDsAfterSearch garderait en localStorage la correspondance
+    //   fiche → recherche (cache utile aux seules conversions).
     function sendInsightsEvent(event, aa) {
-      if (event.eventType === "click") {
-        aa("sendEvents", [Object.assign({ eventType: "click" }, event.payload)]);
+      var payload = event.payload;
+      if (event.eventType === "view") {
+        var MAX_OBJECT_IDS = 20;
+        var views = [];
+        for (var i = 0; i < payload.objectIDs.length; i += MAX_OBJECT_IDS) {
+          views.push(Object.assign({}, payload, {
+            eventType: "view",
+            objectIDs: payload.objectIDs.slice(i, i + MAX_OBJECT_IDS)
+          }));
+        }
+        aa("sendEvents", views);
+      } else if (event.eventType === "click") {
+        aa("sendEvents", [Object.assign({ eventType: "click" }, payload)]);
       } else if (event.insightsMethod) {
-        aa(event.insightsMethod, event.payload);
+        aa(event.insightsMethod, payload);
       }
     }
 

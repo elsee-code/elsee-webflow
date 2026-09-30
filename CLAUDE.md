@@ -98,6 +98,10 @@ depuis Webflow. Le retour arrière est le même geste, avec la version précéde
 (`git show <commit>~1:<fichier>`). Une session Claude prépare et merge ; le collage et la publication
 Webflow restent une action humaine, et le « Livré » le dit en une ligne avec le fichier à coller.
 
+**La recette donne toujours l'URL complète, domaine et slug** de la page à vérifier (par exemple
+`https://www.elsee.care/lannuaire-des-partenaires-elsee`, ou l'URL du brouillon Webflow avec son slug),
+jamais le seul domaine. Une URL par page touchée, dans le « Livré », à côté du fichier à coller.
+
 Préfixes de commit : `feat:` `fix:` `chore:` `docs:` `ci:`. Documentation en français.
 
 ## 4. La stack Claude Code du dépôt — décision D21

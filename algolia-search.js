@@ -31,7 +31,7 @@ window.addEventListener("DOMContentLoaded", function () {
   var speExpanded = false;
   var prestaExpanded = false;
   var jobExpanded = false;
-  var currentGeoFilter = null; // {lat,lng,label}
+  var currentGeoFilter = null; // {lat,lng,label,bounds} ; bounds = zone, null = cercle
   var searchInstance = null;
   var hasUserLaunchedSearch = false;
   var discountRawValues = []; // valeurs de remboursement renvoyées par Algolia
@@ -39,7 +39,45 @@ window.addEventListener("DOMContentLoaded", function () {
   var mainHitHrefSet = new Set();
   var mainHitPathSet = new Set();
   var mainHitOdooSet = new Set();
-  var urlParamsApplied = false; 
+  var urlParamsApplied = false;
+
+  // Champ « lieu » (maps-autocomplete.js) : un champ, une croix et une liste par version
+  // desktop et mobile ; #maps_input est l'ancien identifiant, encore lu s'il existe.
+  var MAPS_INPUTS = "#maps_input, #maps_input_desktop, #maps_input_mobile";
+  var MAPS_BOXES = "#maps_autocomplete, #maps_autocomplete_mobile";
+  var MAPS_CLEARS = ".directory_search_clear";
+  // Ville, adresse ou code postal : cercle de ce rayon autour du point choisi.
+  var CITY_RADIUS_M = 20000;
+
+  function eachEl(selector, fn) {
+    Array.prototype.forEach.call(document.querySelectorAll(selector), fn);
+  }
+
+  // Reflète le filtre géographique dans les champs « lieu », desktop et mobile.
+  function syncMapsFields(label, active) {
+    eachEl(MAPS_INPUTS, function (input) {
+      input.value = label || "";
+      input.classList.toggle("is-selected", !!label);
+    });
+    eachEl(MAPS_CLEARS, function (btn) {
+      btn.style.display = active ? "block" : "none";
+    });
+    if (!active) {
+      eachEl(MAPS_BOXES, function (box) {
+        box.style.display = "none";
+      });
+    }
+  }
+
+  // Zone (département, région, pays) : rectangle Google, sans tri par distance.
+  // Autre lieu : cercle de CITY_RADIUS_M. geo = null retire le filtre.
+  function setGeoParams(helper, geo) {
+    var bounds = geo && geo.bounds;
+    var circle = geo && !bounds;
+    helper.setQueryParameter("insideBoundingBox", bounds ? [bounds] : undefined);
+    helper.setQueryParameter("aroundLatLng", circle ? geo.lat + "," + geo.lng : undefined);
+    helper.setQueryParameter("aroundRadius", circle ? CITY_RADIUS_M : undefined);
+  }
 
 
 
@@ -394,9 +432,15 @@ function getVisibilityFilter(ignoreGeo) {
         } else {
           params.delete("geolabel");
         }
+        if (currentGeoFilter.bounds) {
+          params.set("geobox", currentGeoFilter.bounds.join(","));
+        } else {
+          params.delete("geobox");
+        }
       } else {
         params.delete("geo");
         params.delete("geolabel");
+        params.delete("geobox");
       }
 
       params.delete("network"); // nettoie les anciens liens ?network=true (filtre réseau retiré)
@@ -1929,30 +1973,19 @@ async function fetchAndRenderMoreBlocks() {
     setupBooleanBlockClicks();
     setupDiscountBlockClicks();
 
-    var mapsClearBtn = document.querySelector(".directory_search_clear");
-    if (mapsClearBtn) {
+    // Croix du champ « lieu », desktop et mobile.
+    eachEl(MAPS_CLEARS, function (mapsClearBtn) {
       mapsClearBtn.addEventListener("click", function () {
         if (!searchInstance || !searchInstance.helper) return;
         var helper = searchInstance.helper;
 
         currentGeoFilter = null;
-        helper.setQueryParameter("aroundLatLng", undefined);
-        helper.setQueryParameter("aroundRadius", undefined);
-
-        var mapsInput = document.getElementById("maps_input");
-        var mapsBox = document.getElementById("maps_autocomplete");
-        if (mapsInput) {
-          mapsInput.value = "";
-          mapsInput.classList.remove("is-selected");
-        }
-        if (mapsBox) {
-          mapsBox.style.display = "none";
-        }
-        mapsClearBtn.style.display = "none";
+        setGeoParams(helper, null);
+        syncMapsFields("", false);
 
         helper.search();
       });
-    }
+    });
 
     var clearBtnMobile = document.getElementById("clear_button_mobile");
     if (clearBtnMobile) {
@@ -1967,24 +2000,11 @@ async function fetchAndRenderMoreBlocks() {
         helper.setQuery("");
         helper.clearRefinements();
         helper.setQueryParameter("filters", undefined);
-        helper.setQueryParameter("aroundLatLng", undefined);
-        helper.setQueryParameter("aroundRadius", undefined);
+        setGeoParams(helper, null);
         currentGeoFilter = null;
         hasUserLaunchedSearch = false;
 
-        var mapsInput = document.getElementById("maps_input");
-        var mapsBox = document.getElementById("maps_autocomplete");
-        var mapsClear = document.querySelector(".directory_search_clear");
-        if (mapsInput) {
-          mapsInput.value = "";
-          mapsInput.classList.remove("is-selected");
-        }
-        if (mapsBox) {
-          mapsBox.style.display = "none";
-        }
-        if (mapsClear) {
-          mapsClear.style.display = "none";
-        }
+        syncMapsFields("", false);
 
         helper.search();
       });
@@ -2212,24 +2232,11 @@ async function fetchAndRenderMoreBlocks() {
         helper.setQuery("");
         helper.clearRefinements();
         helper.setQueryParameter("filters", undefined);
-        helper.setQueryParameter("aroundLatLng", undefined);
-        helper.setQueryParameter("aroundRadius", undefined);
+        setGeoParams(helper, null);
         currentGeoFilter = null;
         hasUserLaunchedSearch = false;
 
-        var mapsInput = document.getElementById("maps_input");
-        var mapsBox = document.getElementById("maps_autocomplete");
-        var mapsClear = document.querySelector(".directory_search_clear");
-        if (mapsInput) {
-          mapsInput.value = "";
-          mapsInput.classList.remove("is-selected");
-        }
-        if (mapsBox) {
-          mapsBox.style.display = "none";
-        }
-        if (mapsClear) {
-          mapsClear.style.display = "none";
-        }
+        syncMapsFields("", false);
 
         helper.search();
       });
@@ -2711,24 +2718,16 @@ async function fetchAndRenderMoreBlocks() {
 
 
     // 13. PARAMS URL ----------------------------------------------------------
-    function applyGeoFilterFromMaps(lat, lng, label) {
-      if (label === undefined) label = "";
-      currentGeoFilter = { lat: lat, lng: lng, label: label };
+    // Appelée par maps-autocomplete.js. bounds = [latNE, lngNE, latSO, lngSO] pour une
+    // zone (département, région, pays) ; absent pour une ville ou une adresse.
+    function applyGeoFilterFromMaps(lat, lng, label, bounds) {
+      currentGeoFilter = { lat: lat, lng: lng, label: label || "", bounds: bounds || null };
       if (searchInstance && searchInstance.helper) {
         var helper = searchInstance.helper;
-        helper.setQueryParameter("aroundLatLng", lat + "," + lng);
-        helper.setQueryParameter("aroundRadius", 50000);
+        setGeoParams(helper, currentGeoFilter);
         helper.search();
       }
-      var mapsInput = document.getElementById("maps_input");
-      var mapsClear = document.querySelector(".directory_search_clear");
-      if (mapsInput) {
-        mapsInput.value = label || "";
-        mapsInput.classList.add("is-selected");
-      }
-      if (mapsClear) {
-        mapsClear.style.display = "block";
-      }
+      syncMapsFields(currentGeoFilter.label, true);
     }
 
     function applyUrlParamsToSearch() {
@@ -2744,6 +2743,7 @@ async function fetchAndRenderMoreBlocks() {
         .split(",")
         .filter(Boolean);
       var geolabel = params.get("geolabel") || "";
+      var geobox = params.get("geobox") || "";
       var urlRemote = params.get("remote") === "true";
       var urlAtHome = params.get("athome") === "true";
 
@@ -2805,28 +2805,15 @@ async function fetchAndRenderMoreBlocks() {
         var lat = parseFloat(parts[0]);
         var lng = parseFloat(parts[1]);
         if (!isNaN(lat) && !isNaN(lng)) {
+          var bounds = geobox.split(",").map(parseFloat);
           currentGeoFilter = {
             lat: lat,
             lng: lng,
-            label: geolabel ? decodeURIComponent(geolabel) : ""
+            label: geolabel ? decodeURIComponent(geolabel) : "",
+            bounds: bounds.length === 4 && bounds.every(isFinite) ? bounds : null
           };
-          helper.setQueryParameter("aroundLatLng", lat + "," + lng);
-          helper.setQueryParameter("aroundRadius", 50000);
-
-          var mapsInput = document.getElementById("maps_input");
-          var mapsClear = document.querySelector(".directory_search_clear");
-          if (mapsInput) {
-            if (geolabel) {
-              mapsInput.value = decodeURIComponent(geolabel);
-              mapsInput.classList.add("is-selected");
-            } else {
-              mapsInput.value = "";
-              mapsInput.classList.remove("is-selected");
-            }
-          }
-          if (mapsClear) {
-            mapsClear.style.display = "block";
-          }
+          setGeoParams(helper, currentGeoFilter);
+          syncMapsFields(currentGeoFilter.label, true);
         }
       }
 

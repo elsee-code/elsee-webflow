@@ -39,15 +39,18 @@ en arrière) · `dev_ops:docs/WORKFLOW.md` (branches et promotion) · `dev_ops:s
 
 Quelques scripts de fonctionnalités sur mesure pour le site public `www.elsee.care`, construit dans
 Webflow. **Rien ne se déploie depuis GitHub** : chaque fichier est un bloc de code personnalisé,
-**collé à la main** dans Webflow (réglages du site ou de la page, *Custom code*), puis le site est
-publié depuis Webflow. Merger ne met rien en ligne ; ne pas coller ne met rien en ligne non plus.
+**collé à la main** dans Webflow (réglages du site ou de la page, *Custom code*), ou chargé par une
+balise `<script src="https://cdn.jsdelivr.net/gh/elsee-code/elsee-webflow@<commit>/<fichier>">`
+**épinglée sur un commit**, puis le site est publié depuis Webflow. Merger ne met rien en ligne ; ne
+pas coller (ou ne pas changer le commit de la balise) ne met rien en ligne non plus.
 
 D'où une stack réduite (D33) : pas d'environnement GitHub, pas de compte de service, pas de workflow
 de déploiement. Une CI d'hygiène, la stack Claude Code commune, et ce fichier.
 
 | Fichier | Ce qu'il fait | Où il est collé |
 |---|---|---|
-| `algolia-search.js` | moteur de l'annuaire des partenaires : recherche, facettes (métiers, remboursement), géolocalisation, cartes | page `lannuaire-des-partenaires-elsee` |
+| `algolia-search.js` | moteur de l'annuaire des partenaires : recherche, facettes (métiers, remboursement), géolocalisation, cartes | page `lannuaire-des-partenaires-elsee`, balise jsDelivr épinglée (`@7154434` relevé le 2026-10-01) |
+| `maps-autocomplete.js` | champ « lieu » de l'annuaire : suggestions Google Places ; ville ou adresse = cercle de 20 km, département, région ou pays = rectangle de la zone ; appelle `window.applyGeoFilterFromMaps` du moteur | page `lannuaire-des-partenaires-elsee`, balise jsDelivr au **même commit** que `algolia-search.js` ; la balise Google Maps (avec sa clé) reste dans Webflow |
 | `network-search.js` | recherche simplifiée de la page d'accueil, qui renvoie vers l'annuaire ; charge `algoliasearch-lite` 4.10.5 et `instantsearch.js` 4.27.0 depuis jsDelivr | page d'accueil |
 | `elsee.js` | script global : accordéon FAQ, virgules des listes CMS, boutons `.funnelentry` | réglages du site |
 | `utils.js` | utilitaires de page : URL affichée, dates localisées, FAQ, formulaire multi-étapes (redirige vers `app.elsee.care/mon-offre` et poste le lead à un scénario Make) | page(s) du formulaire |
@@ -93,9 +96,10 @@ servie par `python3 -m http.server`, et le skill `webapp-testing` pour la captur
 partent vers la production en lecture seule : sans effet de bord.
 
 **Le circuit d'une modification** : branche `feat/<slug>`, `fix/<slug>` ou `claude/<slug>` → PR, CI
-verte → merge → **copier le fichier mergé** dans le bloc Webflow correspondant → publier le site
-depuis Webflow. Le retour arrière est le même geste, avec la version précédente du fichier
-(`git show <commit>~1:<fichier>`). Une session Claude prépare et merge ; le collage et la publication
+verte → merge → **copier le fichier mergé** dans le bloc Webflow correspondant, ou mettre le commit
+mergé dans sa balise jsDelivr → publier le site depuis Webflow. Le retour arrière est le même geste,
+avec la version précédente du fichier (`git show <commit>~1:<fichier>`) ou le commit précédent dans
+la balise. Une session Claude prépare et merge ; le collage et la publication
 Webflow restent une action humaine, et le « Livré » le dit en une ligne avec le fichier à coller.
 
 Préfixes de commit : `feat:` `fix:` `chore:` `docs:` `ci:`. Documentation en français.

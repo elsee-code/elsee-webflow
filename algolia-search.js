@@ -26,6 +26,7 @@ window.addEventListener("DOMContentLoaded", function () {
   // 2. ÉTAT GLOBAL -----------------------------------------------------------
   var selectedFacetTags = new Set();
   var selectedJobTags = [];
+  var isNewSelected = false;
   var isRemoteSelected = false;
   var isAtHomeSelected = false;
   var speExpanded = false;
@@ -104,6 +105,7 @@ window.addEventListener("DOMContentLoaded", function () {
   var userHasFilters =
     selectedFacetTags.size > 0 ||
     selectedJobTags.length > 0 ||
+    isNewSelected ||
     isRemoteSelected ||
     isAtHomeSelected ||
     currentGeoFilter;
@@ -373,6 +375,11 @@ window.addEventListener("DOMContentLoaded", function () {
       // D17 point 2 : « La condition est `partner_in_network === true`, pour toutes les entités… »
       // D35 point 1 : « Pour `users_display`, le prédicat d'éligibilité est
       // `partner_in_network === true` et `elsee_stage_id.id !== 19`, et rien d'autre. »
+      // « Nouveaux partenaires » : network_new est calculé par le backend (un mois après
+      // l'entrée dans le réseau) ; aucune fiche de dev_ops:decisions/ ne le définit.
+      if (isNewSelected) {
+        parts.push("network_new:true");
+      }
       if (isRemoteSelected) {
         parts.push("is_remote:true");
       }
@@ -476,6 +483,9 @@ function getVisibilityFilter(ignoreGeo) {
       }
 
       params.delete("network"); // nettoie les anciens liens ?network=true (filtre réseau retiré)
+
+      if (isNewSelected) params.set("new", "true");
+      else params.delete("new");
 
       if (isRemoteSelected) params.set("remote", "true");
       else params.delete("remote");
@@ -867,10 +877,19 @@ if (typeof window.__toggleTypeCTAs === "function") {
         }
 
         // BOOLÉENS -------------------------------------------------------------
-        // ancien bouton « Membres réseaux » : tout l'annuaire est dans le réseau
+        // « Nouveaux partenaires », dans l'emplacement de l'ancien bouton « Membres réseaux »,
+        // au-dessus de la visio ; affiché quel que soit le type
         if (labelFilterWrapper) {
-          labelFilterWrapper.innerHTML = "";
-          labelFilterWrapper.style.display = "none";
+          labelFilterWrapper.style.display = "flex";
+          labelFilterWrapper.innerHTML =
+            '<div class="directory_category_tag_wrapper ' +
+            (isNewSelected ? "is-selected" : "") +
+            '" data-bool-filter="new">' +
+            '<span class="directory_option_icon">' +
+            '<svg width="auto" height="auto" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5C10.5 6 14 9.5 18.5 10C14 10.5 10.5 14 10 18.5C9.5 14 6 10.5 1.5 10C6 9.5 9.5 6 10 1.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>' +
+            "</span>" +
+            "<span>Nouveaux partenaires</span>" +
+            "</div>";
         }
 
         // filtres visio / domicile → seulement si aucun type OU thérapeutes
@@ -1566,7 +1585,7 @@ function buildFacetFiltersFor(label) {
 
 
 function makeFiltersString(extra, ignoreGeo) {
-  // jobs + booléens (remote / athome)
+  // jobs + booléens (new / remote / athome)
   var userFilters = buildFiltersStringFromJobsAndBooleans();
   var visibility  = getVisibilityFilter(!!ignoreGeo);
 
@@ -1671,7 +1690,10 @@ function buildMoreUrlForType(typeFacetValue) {
     params.delete("jobs");
   }
 
-  // --- Booléens (remote / athome) ------------------------------
+  // --- Booléens (new / remote / athome) ------------------------
+  if (isNewSelected) params.set("new", "true");
+  else params.delete("new");
+
   if (isRemoteSelected) params.set("remote", "true");
   else params.delete("remote");
 
@@ -1693,6 +1715,7 @@ function buildMoreUrlForType(typeFacetValue) {
     prestaRef: prestaRef,
     reimbRef: reimbRef,
     jobs: (selectedJobTags || []).slice(),
+    isNewSelected: isNewSelected,
     isRemoteSelected: isRemoteSelected,
     isAtHomeSelected: isAtHomeSelected,
     finalUrl: finalUrl
@@ -2027,6 +2050,7 @@ async function fetchAndRenderMoreBlocks() {
 
         selectedFacetTags.clear();
         selectedJobTags.length = 0;
+        isNewSelected = false;
         isRemoteSelected = false;
         isAtHomeSelected = false;
         helper.setQuery("");
@@ -2044,6 +2068,7 @@ async function fetchAndRenderMoreBlocks() {
 
     // 12. FONCTIONS DE SETUP --------------------------------------------------
     function setupBooleanBlockClicks() {
+      var newFilterWrapper = document.getElementById("label-filter");
       var remoteFilterWrapper = document.getElementById(
         "works-remotely-filter"
       );
@@ -2053,6 +2078,9 @@ async function fetchAndRenderMoreBlocks() {
 
       function toggleAndSearch(flagName) {
         if (!searchInstance || !searchInstance.helper) return;
+        if (flagName === "new") {
+          isNewSelected = !isNewSelected;
+        }
         if (flagName === "remote") {
           isRemoteSelected = !isRemoteSelected;
         }
@@ -2066,6 +2094,14 @@ async function fetchAndRenderMoreBlocks() {
         helper.search();
       }
 
+      if (newFilterWrapper) {
+        newFilterWrapper.addEventListener("click", function (e) {
+          var btn = e.target.closest("[data-bool-filter]");
+          if (!btn) return;
+          var flagName = btn.getAttribute("data-bool-filter");
+          toggleAndSearch(flagName);
+        });
+      }
       if (remoteFilterWrapper) {
         remoteFilterWrapper.addEventListener("click", function (e) {
           var btn = e.target.closest("[data-bool-filter]");
@@ -2243,7 +2279,7 @@ async function fetchAndRenderMoreBlocks() {
       var hasFacets = selectedFacetTags.size > 0;
       var hasGeo = !!currentGeoFilter;
       var hasJobs = selectedJobTags.length > 0;
-      var hasBools = isRemoteSelected || isAtHomeSelected;
+      var hasBools = isNewSelected || isRemoteSelected || isAtHomeSelected;
 
       clearBtn.style.display =
         hasQuery || hasFacets || hasGeo || hasJobs || hasBools
@@ -2259,6 +2295,7 @@ async function fetchAndRenderMoreBlocks() {
 
         selectedFacetTags.clear();
         selectedJobTags.length = 0;
+        isNewSelected = false;
         isRemoteSelected = false;
         isAtHomeSelected = false;
         helper.setQuery("");
@@ -2397,6 +2434,16 @@ async function fetchAndRenderMoreBlocks() {
         });
       });
 
+      if (isNewSelected) {
+        addTag({
+          key: "bool:::new",
+          facetName: "new",
+          value: "true",
+          label: "Nouveaux partenaires",
+          type: "boolean"
+        });
+      }
+
       if (isRemoteSelected) {
         addTag({
           key: "bool:::remote",
@@ -2457,6 +2504,7 @@ async function fetchAndRenderMoreBlocks() {
       var key = tagEl.getAttribute("data-tag-key") || facetName + ":::" + facetValue;
 
       if (tagType === "boolean") {
+        if (facetName === "new") isNewSelected = false;
         if (facetName === "remote") isRemoteSelected = false;
         if (facetName === "athome") isAtHomeSelected = false;
 
@@ -2776,6 +2824,7 @@ async function fetchAndRenderMoreBlocks() {
         .filter(Boolean);
       var geolabel = params.get("geolabel") || "";
       var geobox = params.get("geobox") || "";
+      var urlNew = params.get("new") === "true";
       var urlRemote = params.get("remote") === "true";
       var urlAtHome = params.get("athome") === "true";
 
@@ -2826,6 +2875,7 @@ async function fetchAndRenderMoreBlocks() {
         }
       });
 
+      isNewSelected = urlNew;
       isRemoteSelected = urlRemote;
       isAtHomeSelected = urlAtHome;
 

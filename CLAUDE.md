@@ -49,8 +49,8 @@ de déploiement. Une CI d'hygiène, la stack Claude Code commune, et ce fichier.
 
 | Fichier | Ce qu'il fait | Où il est collé |
 |---|---|---|
-| `algolia-search.js` | moteur de l'annuaire des partenaires : recherche, facettes (métiers, remboursement), géolocalisation, cartes | page `lannuaire-des-partenaires-elsee`, balise jsDelivr épinglée (`@ce778e6`, avec `integrity`, en ligne depuis le 2026-10-01) |
-| `maps-autocomplete.js` | champ « lieu » de l'annuaire : suggestions Google Places ; ville ou adresse = cercle de 20 km, département, région ou pays = rectangle de la zone ; appelle `window.applyGeoFilterFromMaps` du moteur | page `lannuaire-des-partenaires-elsee`, balise jsDelivr au **même commit** que `algolia-search.js` (`@ce778e6`, avec `integrity`) ; la balise Google Maps (avec sa clé) reste dans Webflow |
+| `algolia-search.js` | moteur de l'annuaire des partenaires : recherche, facettes (métiers, remboursement), options (nouveaux partenaires, visio, domicile), géolocalisation, cartes | page `lannuaire-des-partenaires-elsee`, balise jsDelivr épinglée (`@0b031c1`, avec `integrity`, lu en ligne le 2026-10-07) |
+| `maps-autocomplete.js` | champ « lieu » de l'annuaire : suggestions Google Places ; ville ou adresse = cercle de 20 km, département, région ou pays = rectangle de la zone ; appelle `window.applyGeoFilterFromMaps` du moteur | page `lannuaire-des-partenaires-elsee`, balise jsDelivr au **même commit** que `algolia-search.js` (`@0b031c1`, avec `integrity`) ; la balise Google Maps (avec sa clé) reste dans Webflow |
 | `network-search.js` | recherche simplifiée de la page d'accueil, qui renvoie vers l'annuaire ; charge `algoliasearch-lite` 4.10.5 et `instantsearch.js` 4.27.0 depuis jsDelivr | page d'accueil |
 | `elsee.js` | script global : accordéon FAQ, virgules des listes CMS, boutons `.funnelentry` | réglages du site |
 | `utils.js` | utilitaires de page : URL affichée, dates localisées, FAQ, formulaire multi-étapes (redirige vers `app.elsee.care/mon-offre` et poste le lead à un scénario Make) | page(s) du formulaire |

@@ -1,6 +1,6 @@
 ---
 name: session-dev
-description: Contrat d'une session de développement sur un dépôt applicatif Elsee (webapp, elsee_functions_v2, internal_tool) — nouvelle feature, mise à jour ou correction de bug. À charger dès qu'une spec, un correctif, un « direct en prod », une livraison, une recette ou un GO / NO GO est en jeu. Fixe le mode de la session, le cadrage, ce qui est livré et sous quelle forme, qui merge et qui promeut, et ce qui termine la session.
+description: Contrat d'une session de développement sur un dépôt applicatif Elsee (webapp, elsee_functions_v2, internal_tool) — nouvelle feature, mise à jour ou correction de bug. À charger dès qu'une spec, un correctif, un « direct en prod », une livraison, une recette ou un GO / NO GO est en jeu. Fixe le mode de la session, le cadrage, ce qui est livré et sous quelle forme, qui merge et qui promeut, la carte Notion (en cours à la prise, Released ou Fixed à la fermeture), et ce qui termine la session.
 ---
 
 # session-dev — le contrat d'une session de développement
@@ -18,7 +18,7 @@ question d'ouverture (4).
 | L'humain fait le produit | La session fait le dev |
 |---|---|
 | écrit la demande | lit le mode (§ 1), cadre (§ 2), code, teste |
-| répond aux questions de cadrage | ouvre la PR, la merge, déploie sur staging, promeut |
+| répond aux questions de cadrage | ouvre la PR, la merge, déploie sur staging, promeut, tient la carte Notion (§ 1 bis) |
 | recette fonctionnellement, sur l'URL donnée | livre au format fixe (§ 4) |
 | dit **GO** ou **NO GO** | exécute le GO et ferme (§ 5) |
 
@@ -48,6 +48,42 @@ C'est la liste du § 5 de `dev_ops:standards/securite.md`.
 session s'arrête en une ligne — « ça touche `<fichier>`, qui est structurel, je continue ? » — et
 attend la réponse. Une ligne, une réponse, elle repart. C'est la famille de changements qui détruit
 en vert et sans log (règles Storage écrasées le 2026-08-22).
+
+## 1 bis. La carte Notion suit la session (D48)
+
+Le board est la **Tasks DB** de Notion (`collection://8be5f31c-c4d1-4dc5-b05a-29fdc076b20c`) ; ses
+colonnes sont la propriété **`Status`**. Relevé du schéma et pièges déjà tombés :
+`dev_ops:docs/prompts/creer-les-tickets-notion.md` § 2. Les valeurs se copient depuis le schéma
+(`notion-fetch`), jamais retapées : une seule valeur fausse fait rejeter toute l'écriture.
+
+**La demande cite une carte** — un lien Notion ou un numéro `PRODUCT-<n>` (= `Task ID`) :
+
+- **à la prise**, avant la première ligne de code : chaque carte citée passe en **`On going`** ;
+- **à « Fermé »** (§ 5) : elle passe en **`Released`**, et son corps reçoit une ligne datée — la PR, le
+  commit ou le tag en prod, l'URL.
+
+« Livré » et « Arrêté » ne la déplacent pas : elle reste `On going` jusqu'à la fermeture.
+
+**La demande ne cite aucune carte** — un bug signalé dans la conversation, une modification demandée en
+direct : à « Fermé », la session **crée** la carte qui garde la trace de ce qui est parti.
+
+| Propriété | Valeur |
+|---|---|
+| `Task name` | un titre explicite, lisible sans ouvrir la carte : ce qui a changé, où, pour qui. « Le bouton Envoyer de la page facture ne reste plus grisé après un refus », pas « fix facture » |
+| `Status` | **`Fixed`** pour un bug, **`Released`** pour tout le reste (feature, mise à jour) |
+| `Type` | `🦟 Bug`, `🌿 New feature` ou `🪴 Feature update` |
+| `Product` | `webapp` → `WebApp` · `internal_tool` → `studio` · `elsee_functions_v2` → `Api` (ou `Odoo`, `Brevo`… si le changement porte sur cette intégration) · `elsee-webflow` → `Website` |
+| `Cycle` | le sprint dont `État du sprint` vaut `Actuel` (data source `collection://7fe8267d-7be8-43c2-a1fd-a661bfec3447`) |
+| `Detailed description` | une à deux phrases : le symptôme corrigé, ou ce qui change pour l'utilisateur |
+| corps de la page | le résumé : ce qui change, la PR, le commit ou le tag en prod, la date ; pour un bug, le diagnostic en trois lignes (§ 2 bis) |
+
+Ni secret ni donnée personnelle dans une carte : un identifiant de document suffit, jamais l'e-mail ou le
+nom d'un membre. La carte de trace ne couvre que la demande elle-même ; ce qui est remarqué à côté
+reste une issue `[à trier]` (§ 6).
+
+**Sans connecteur Notion, ou si l'écriture échoue** : le message « Fermé » le dit en une ligne et porte
+le titre et le résumé prévus, prêts à coller. La carte ne retient pas la session : elle se termine quand
+même.
 
 ## 2. Cadrage : des questions, jamais une interprétation
 
@@ -199,8 +235,10 @@ le message « Fermé » porte le tableau **B** seul, sous le titre « À surveil
 - **`elsee_functions_v2`** et **`internal_tool`** : merger la PR (merge commit, comme les autres PR du
   dépôt). Le merge est le déploiement : attendre le run vert.
 
-Puis le message **« Fermé »** : ce qui est en prod, le commit ou le tag, l'URL, et en « direct en prod »
-le tableau « À surveiller » (§ 4 B). La session est finie.
+Puis la carte Notion (§ 1 bis) : la carte citée passe en `Released`, ou la carte de trace est créée en
+`Fixed` (bug) ou `Released` (le reste). Puis le message **« Fermé »** : ce qui est en prod, le commit ou
+le tag, l'URL, le lien de la carte, et en « direct en prod » le tableau « À surveiller » (§ 4 B). La
+session est finie.
 
 Les trois seuls états qui terminent une session : **Livré** (attente du GO), **Fermé** (GO exécuté),
 **Arrêté** (bloqué : ce qui bloque et ce qu'il faut pour reprendre). Un **NO GO** reste dans la même
@@ -231,4 +269,6 @@ Deux exceptions, et seulement deux :
 - sauter les contrôles en mode « direct en prod » : « direct » saute la recette, pas la CI ;
 - continuer sur un fichier structurel sans avoir posé la ligne de réserve du § 1 ;
 - terminer dans un autre état que Livré, Fermé ou Arrêté ;
+- commencer le code d'une carte Notion sans l'avoir passée en `On going`, ou dire « Fermé » sans avoir
+  passé la carte en `Released` — ou, sans carte, sans avoir créé la carte de trace (§ 1 bis) ;
 - corriger un bug sans preuve du symptôme et de la cause (§ 2 bis), même en mode « incident ».

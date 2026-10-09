@@ -26,6 +26,12 @@ Si la tâche touche **plus d'un dépôt**, elle ne se traite pas ici : elle se p
   commentaire du code.
 - **Un incident = un gotcha daté** dans `dev_ops:docs/RUNBOOK.md` § 5, le jour même.
 - **Une case ne se coche qu'une fois vérifiée, avec la date.**
+- **La carte Notion suit la session** (décision D48, 2026-10-09). Une demande qui cite une carte
+  (lien Notion ou `PRODUCT-<n>`) : la session la passe en `On going` avant sa première ligne de code,
+  puis en `Released` à « Fermé ». Une demande sans carte : à « Fermé », la session en crée une dans le
+  board (Tasks DB), titre explicite et résumé dans le corps, en `Fixed` pour un bug, en `Released` pour
+  le reste. Ici, merger ne met rien en ligne (D33) : la carte passe en `Released` au merge, et son
+  corps dit que le collage dans Webflow reste à faire. Détail : skill `session-dev` § 1 bis.
 - **Une PR qui touche l'auth, les règles, un paiement ou des données personnelles passe par une
   revue de sécurité** (skill `security-review`), dont le résultat est collé dans la PR.
 

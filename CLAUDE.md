@@ -115,7 +115,7 @@ Préfixes de commit : `feat:` `fix:` `chore:` `docs:` `ci:`. Documentation en fr
 Source unique : `dev_ops:claude/` ; copie dans `.claude/` par `dev_ops:claude/sync-stack.sh`
 (`--check` refuse une copie qui diverge). **Ne rien modifier dans `.claude/` sur place.** Stack allégée (D33) : `onboarding`, `paywalls`, `skill-creator` et `find-skills` ne sont pas copiés
 (`dev_ops:claude/per-repo/elsee-webflow/.sync-exclude`) ; les skills CRO du site public restent, sous les
-garde-fous de D30. Directives
-permanentes (stop-slop, task-observer, mem, code-simplifier) injectées par le hook `SessionStart` ;
+garde-fous de D30 ; `unlazy` (D63) est posé comme ailleurs. Directives
+permanentes (stop-slop, task-observer, mem, code-simplifier, sous-agents en parallèle de D63) injectées par le hook `SessionStart` ;
 revue de sécurité automatique par le plugin `security-guidance`, avec les règles de ce dépôt dans
 `.claude/claude-security-guidance.md`. Détail : `dev_ops:claude/README.md`.

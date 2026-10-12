@@ -150,6 +150,10 @@ Ce que la session fait, dans tous les modes :
   `flutter build web` ; `elsee_functions_v2` : `npm run lint`, `npm run typecheck`, `npm test`, sans
   committer `functions/lib/` ; `internal_tool` : `npm run build`, `npm run check:tokens`, ses tests) ;
 - ajoute un test à tout bug corrigé quand c'est possible, et teste ce qu'elle touche ;
+- sur une demande substantielle (plusieurs livrables indépendants, un audit exhaustif, un fan-out de
+  sous-agents), charge le skill **`unlazy`** (D63) : ses gates s'écrivent avant le code, avec les
+  contrôles ci-dessus pour `CHECK:`, et une gate non tenue empêche le « Livré » (§ 4). Pas pour un
+  correctif d'une ligne ;
 - pour tout écran, vérifie **visuellement** dans Chromium (Playwright, Firebase bouchonné) et garde
   les captures pour la livraison ;
 - **ne touche pas** à ce qui n'est pas dans le périmètre, y compris un défaut évident à côté (§ 6) ;

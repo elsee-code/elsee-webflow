@@ -53,3 +53,22 @@ message de livraison le dit en un mot.
 
 La simplification a lieu dans le même tour pour que la revue de fin de tour de security-guidance
 porte sur le diff final.
+
+## Sous-agents en parallèle — autorisé (D63)
+
+Deux travaux indépendants ou plus (recherches, lectures sur plusieurs dépôts, vérifications, feuilles
+d'un arbre `unlazy`) partent en sous-agents `Agent` d'arrière-plan, **tous dans le même message**, sans
+attendre le premier pour lancer le suivant. `.claude/settings.json` les autorise sans demande
+(`permissions.allow`), jusqu'à 10 en parallèle (`CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY`). Les règles :
+
+- un brief complet par sous-agent : son périmètre, les fichiers qu'il peut écrire, ce qu'il rapporte
+  (fichier et ligne à l'appui). Deux sous-agents n'écrivent jamais le même fichier ;
+- aucun sous-agent ne commit, ne pousse, ne merge, ne déploie ni n'écrit sur un système partagé
+  (Firestore, Webflow, Brevo, Algolia, Odoo). La session parente relit ce qu'ils rendent, rejoue les
+  contrôles du dépôt, puis committe ;
+- attendre la notification de fin de chacun avant un commit, un « Livré » ou un « Fermé » ; ne jamais
+  annoncer le résultat d'un sous-agent encore en cours ;
+- deux clones simultanés d'un même dépôt échouent tous les deux en 429 (le proxy git de la session
+  plafonne les opérations concurrentes) : clones, fetch et push se font en série, par la session parente ;
+- un chantier sur plusieurs dépôts reste une session enfant par dépôt (`dev_ops:CLAUDE.md` § 3.3), pas
+  un sous-agent ; un *Dynamic Workflow* seulement si l'humain l'a demandé.

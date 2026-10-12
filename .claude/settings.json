@@ -11,12 +11,17 @@
   "enabledPlugins": {
     "security-guidance@claude-plugins-official": true
   },
+  "env": {
+    "CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY": "10",
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "20"
+  },
   "permissions": {
-  "allow": [
-    "Bash(node scripts/gcp-read.mjs:*)",
-    "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)"
-  ]
-},
+    "allow": [
+      "Agent",
+      "Bash(node scripts/gcp-read.mjs:*)",
+      "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

@@ -59,6 +59,7 @@ La session attend la réponse. Elle ne choisit pas l'option « la plus raisonnab
 | « minimiser la friction » de la bannière cookies (`cro/references/experiments.md`) | aucune règle écrite chez nous. Cadre légal : la CNIL exige que refuser soit aussi simple qu'accepter. | — |
 | offre gratuite qui « accroche sans satisfaire » (`onboarding/references/activation-models.md`) | aucune règle écrite chez nous. C'est un choix produit sur un programme de remboursement santé : à l'humain. | — |
 | demander le téléphone, ajouter des champs, pré-cocher (`cro/references/form.md`, `signup`) | « Est structurel ce qui touche […] des données personnelles ou de santé » | `dev_ops:decisions/D19` § 2 |
+| champ e-mail, formulaire de lead sur une landing du Studio (`cro`, `cro/references/form.md`) | « Le champ e-mail (hero et appel final, collecte seulement) porte la mention du formulaire « Obtenir mon offre » d'elsee.care et part à `leadWebflow` comme les formulaires du site » ; un seul champ, aucune autre page n'a de formulaire | `dev_ops:decisions/D51` § 4 |
 
 Une règle absente de ce tableau n'est pas une permission : face au doute, arrêter au même format.
 

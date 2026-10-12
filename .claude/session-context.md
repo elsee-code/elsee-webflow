@@ -1,8 +1,28 @@
 # Directives permanentes de session — plateforme Elsee
 
 Injecté à chaque démarrage par `.claude/hooks/session-start.sh`. Source : `dev_ops/claude/common/session-context.md`.
-Le contrat de dev (qui merge, qui promeut, modes, fins de session) est le skill `session-dev` : le lire en
-première action, comme le demande le `CLAUDE.md`.
+Le contrat de dev (qui merge, qui promeut, modes, fins de session) est le skill `session-dev` : il
+s'active seul dès qu'une demande de dev arrive (section suivante).
+
+## Skills à activation autonome (D66)
+
+Quatre skills se chargent **sans qu'on les appelle**, dès que leur déclencheur est vrai, et sans
+demander l'accord de l'humain. Charger = appeler le skill par son nom ; si le harnais ne le liste pas
+encore (il ne découvre les skills d'un dépôt qu'après un accès à un de ses fichiers), lire directement
+`.claude/skills/<nom>/SKILL.md`. Le premier message qui suit le dit en une ligne : « skill X chargé :
+<déclencheur> ». Un déclencheur faux, on ne charge rien.
+
+| Skill | Se charge quand | Avant quoi |
+|---|---|---|
+| `session-dev` | la demande mène à écrire du code ou de la config dans `webapp`, `elsee_functions_v2`, `internal_tool` ou `elsee-webflow` : feature, mise à jour, bug, « direct en prod », « incident », recette, GO / NO GO | le cadrage |
+| `unlazy` | la demande porte deux livrables indépendants ou plus, un audit ou un relevé exhaustif, un travail réparti entre sous-agents, plus de quelques fichiers, ou un travail déjà revenu à moitié fait. En mode bug ou « incident » : seulement si le correctif touche plusieurs fichiers | le plan |
+| `webapp-testing` | un changement se voit à l'écran (`webapp` : `lib/`, `web/` ; `internal_tool` : `apps/studio/` ; `elsee-webflow` : un script du site), ou un bug d'affichage est à reproduire | la livraison : les captures vont dans le « Livré » |
+| `find-skills` | un besoin revient et aucun skill de la stack ne le couvre, ou l'humain demande s'il existe un skill pour quelque chose (absent d'`elsee-webflow`, D33) | la proposition |
+
+`find-skills` cherche et propose, en une ligne : le skill, sa source, sa licence. Il n'installe jamais
+rien : un skill tiers entre dans la stack par une PR `dev_ops` (copie relue, addendum, fiche), comme
+`unlazy` avec D63. La session peut préparer cette PR elle-même, puis attend le GO comme pour toute
+livraison.
 
 ## stop-slop — permanent
 

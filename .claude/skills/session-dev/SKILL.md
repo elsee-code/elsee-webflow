@@ -219,10 +219,14 @@ le message « Fermé » porte le tableau **B** seul, sous le titre « À surveil
 ## 5. GO → la session exécute, puis « Fermé »
 
 - **`webapp`, feature ou update** (D24) : merger la PR (merge commit) ; attendre *Deploy Staging* vert.
-  Puis *Deploy Preprod* (`deploy-preprod.yml`, ref `main`) en mode `audit`, lire le lot ; **s'il contient
-  d'autres commits que ceux de cette session**, s'arrêter en une ligne avec leur liste et attendre :
-  promouvoir emporte tout ce que staging sert. Sinon relancer en `promote`, `confirm = DEPLOY-PREPROD`,
-  `portee = <le nombre lu>` ; vérifier `https://preprod-elsee.web.app/version.json`. Puis *Deploy
+  Puis *Deploy Preprod* (`deploy-preprod.yml`, ref `main`) en mode `audit`, lire le lot. **S'il ne
+  contient que les commits de cette session**, ou des commits que l'audit marque « déjà en prod » (un
+  hotfix mergé dans `main` après coup), relancer en `promote`, `confirm = DEPLOY-PREPROD`,
+  `portee = <le nombre lu>`. **S'il en contient d'autres**, ne pas les emporter : promotion sélective
+  (D56) — `audit` avec `selection = <le numéro de la PR>`, puis mode `selection`, même entrée,
+  `confirm = DEPLOY-PREPROD`. Preprod devient la prod plus cette PR. Un conflit de copie veut dire que
+  la PR dépend d'un changement non sélectionné : s'arrêter en une ligne avec les commits nommés par le
+  résumé. Vérifier `https://preprod-elsee.web.app/version.json`. Puis *Deploy
   Production* (ref `main`) en mode `audit`, même lecture du lot (D14), puis `clone-from-preprod`,
   `confirm = DEPLOY-PROD`, `portee = <le nombre lu>`. Vérifier que `https://app.elsee.care/version.json`
   sert le bon commit. Le GO de l'humain vaut pour les deux promotions ; la recette preprod est un

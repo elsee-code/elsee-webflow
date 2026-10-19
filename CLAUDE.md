@@ -59,7 +59,7 @@ de déploiement. Une CI d'hygiène, la stack Claude Code commune, et ce fichier.
 | `maps-autocomplete.js` | champ « lieu » de l'annuaire : suggestions Google Places ; ville ou adresse = cercle de 20 km, département, région ou pays = rectangle de la zone ; appelle `window.applyGeoFilterFromMaps` du moteur | page `lannuaire-des-partenaires-elsee`, balise jsDelivr au **même commit** que `algolia-search.js` (`@0b031c1`, avec `integrity`) ; la balise Google Maps (avec sa clé) reste dans Webflow |
 | `network-search.js` | recherche simplifiée de la page d'accueil, qui renvoie vers l'annuaire ; charge `algoliasearch-lite` 4.10.5 et `instantsearch.js` 4.27.0 depuis jsDelivr | page d'accueil |
 | `elsee.js` | script global : accordéon FAQ, virgules des listes CMS, boutons `.funnelentry` | réglages du site |
-| `utils.js` | utilitaires de page : URL affichée, dates localisées, FAQ, formulaire multi-étapes (redirige vers `app.elsee.care/mon-offre` et poste le lead à un scénario Make) | page(s) du formulaire |
+| `utils.js` | utilitaires de page : URL affichée, dates localisées, FAQ, virgules des listes CMS. Le formulaire multi-étapes qui postait à Make est retiré le 2026-10-19 : aucune page n'avait plus son `#customerForm`, et `/obtenir-mon-offre` poste à `leadWebflow` depuis un script collé dans la page | réglages du site, *Footer code*, balise jsDelivr épinglée sur un commit, avec `integrity` |
 
 Les emplacements exacts se lisent dans Webflow ; ce tableau se corrige dès qu'on les vérifie.
 

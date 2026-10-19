@@ -1,15 +1,18 @@
 // ============================================================================
 // new-members.js — bloc « Nouveaux partenaires »
 // ============================================================================
-// Les partenaires nouveaux dans le réseau, 4 cartes au plus, avec une seule rangée de
-// filtres au-dessus : la catégorie (facette `type`). Cartes et rangée reprennent le
-// balisage et les classes Webflow de l'annuaire (algolia-search.js : buildCardHTML et
-// #directory_types) ; une évolution de la carte là-bas se reporte ici.
+// Les partenaires nouveaux dans le réseau, avec une seule rangée de filtres au-dessus :
+// la catégorie (facette `type`). 4 cartes sur desktop et tablette ; sur mobile, 12 cartes
+// qui défilent, puis une 13e carte « voir plus » vers l'annuaire. Cartes, carte « voir
+// plus » et rangée reprennent le balisage et les classes Webflow de l'annuaire
+// (algolia-search.js : buildCardHTML, renderInto et #directory_types) ; une évolution
+// de la carte là-bas se reporte ici.
 //
 // À poser dans la page Webflow (bloc Embed) :
 //   <div id="new_members_types" class="directory_categories_wrapper"></div>
 //   <div id="new_members_hits"></div>
-//   <a id="new_members_more" href="#">Voir tous les nouveaux partenaires</a>  (facultatif)
+//   <a id="new_members_more" href="#">Tous les nouveaux partenaires</a>  (facultatif : le
+//   script met à jour son lien, et la carte « voir plus » reprend son texte)
 // Bibliothèques : algoliasearch-lite 4.10.5 et instantsearch.js 4.27.0, les mêmes que
 // l'annuaire. Sur la page de l'annuaire, elles sont déjà chargées : ne pas les doubler.
 
@@ -20,7 +23,9 @@ window.addEventListener("DOMContentLoaded", function () {
   var ALGOLIA_INDEX_NAME = "elsee_index";
   var DIRECTORY_BASE_URL = "https://www.elsee.care/lannuaire-des-partenaires-elsee";
 
-  var HITS_PER_PAGE = 4;
+  var HITS_DESKTOP = 4; // les suivantes sont masquées en CSS au-dessus de 767 px
+  var HITS_MOBILE = 12;
+  var MORE_TEXT_DEFAULT = "Tous les nouveaux partenaires";
   var FILTER_FACET = "type";
   var ALL_VALUE = "__ALL_TYPES__";
 
@@ -62,6 +67,8 @@ window.addEventListener("DOMContentLoaded", function () {
 
   var selectedType = "";
   var icons = readIcons();
+  var moreLink = document.getElementById(MORE_ID);
+  var moreText = (moreLink && moreLink.textContent.trim()) || MORE_TEXT_DEFAULT;
 
   // 2. UTILS -----------------------------------------------------------------
   function readIcons() {
@@ -124,8 +131,8 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   // Mise en page du bloc, et les règles de carte que l'annuaire pose dans sa propre page :
-  // 4 colonnes, 2 sur tablette ; sur mobile, cartes et catégories sur une ligne qui
-  // défile à l'horizontale.
+  // 4 colonnes, 2 × 2 sur tablette ; sur mobile, cartes et catégories sur une ligne qui
+  // défile à l'horizontale, et la carte « voir plus » au bout.
   function ensureCSS() {
     if (document.getElementById("new-members-style")) return;
     var r = "#" + HITS_ID;
@@ -149,7 +156,11 @@ window.addEventListener("DOMContentLoaded", function () {
       "background-color:var(--pink);color:var(--dark_green_op_90);" +
       "font-size:var(--fontsize_xs);font-weight:600;line-height:1.15;" +
       "text-align:center;white-space:nowrap}" +
-      "@media (max-width:991px){" + r + " .new-members-list{grid-template-columns:repeat(2,minmax(0,1fr))}}" +
+      r + " .new-members-more-item{display:flex}" +
+      "@media (min-width:768px){" +
+      r + " .new-members-list>li:nth-child(n+" + (HITS_DESKTOP + 1) + ")," + r + " .new-members-more-item{display:none}}" +
+      // sous 1200 px, 4 colonnes serrent l'en-tête de carte (photo, icônes, taux) : 2 × 2
+      "@media (max-width:1199px){" + r + " .new-members-list{grid-template-columns:repeat(2,minmax(0,1fr))}}" +
       "@media (max-width:767px){" +
       r + " .new-members-list{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;" +
       "-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px}" +
@@ -297,8 +308,21 @@ window.addEventListener("DOMContentLoaded", function () {
     typesEl.innerHTML = html;
   }
 
+  // Carte « voir plus » : même balisage que la 6e carte de renderInto dans l'annuaire.
+  function moreCardHTML() {
+    return (
+      '<li class="new-members-more-item">' +
+        '<div class="more-card">' +
+          '<a href="' + esc(moreUrl()) + '" class="directory_more_card_body">' +
+            '<div class="directory_more_card_title"><div>' + esc(moreText) + "</div></div>" +
+          "</a>" +
+        "</div>" +
+      "</li>"
+    );
+  }
+
   function renderHits(results) {
-    var hits = (results.hits || []).slice(0, HITS_PER_PAGE);
+    var hits = (results.hits || []).slice(0, HITS_MOBILE);
     if (!hits.length) {
       hitsEl.innerHTML = "<div>Aucun nouveau partenaire pour le moment.</div>";
       return;
@@ -308,16 +332,19 @@ window.addEventListener("DOMContentLoaded", function () {
       hits.map(function (hit) {
         return '<li class="directory_card_container">' + buildCardHTML(hit) + "</li>";
       }).join("") +
+      moreCardHTML() +
       "</ol>";
   }
 
-  // Lien vers l'annuaire filtré pareil : ?new=true, et la catégorie choisie.
-  function updateMoreLink() {
-    var more = document.getElementById(MORE_ID);
-    if (!more) return;
+  // L'annuaire filtré pareil : ?new=true, et la catégorie choisie.
+  function moreUrl() {
     var params = new URLSearchParams({ new: "true" });
     if (selectedType) params.set("type", selectedType);
-    more.setAttribute("href", DIRECTORY_BASE_URL + "?" + params.toString());
+    return DIRECTORY_BASE_URL + "?" + params.toString();
+  }
+
+  function updateMoreLink() {
+    if (moreLink) moreLink.setAttribute("href", moreUrl());
   }
 
   // 5. INIT ------------------------------------------------------------------
@@ -338,7 +365,7 @@ window.addEventListener("DOMContentLoaded", function () {
       instantsearch.widgets.configure({
         filters: FILTERS,
         disjunctiveFacets: [FILTER_FACET],
-        hitsPerPage: HITS_PER_PAGE,
+        hitsPerPage: HITS_MOBILE,
         attributesToHighlight: [],
         attributesToRetrieve: [
           "name",

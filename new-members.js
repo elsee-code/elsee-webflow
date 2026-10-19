@@ -82,6 +82,17 @@ window.addEventListener("DOMContentLoaded", function () {
       .replace(/'/g, "&#39;");
   }
 
+  // URL de l'index : http(s) seulement, normalisée par URL (guillemets encodés), sinon "".
+  function safeUrl(v) {
+    if (!v) return "";
+    try {
+      var u = new URL(String(v || ""), window.location.href);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.href : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   function toArray(v) {
     if (!v) return [];
     return Array.isArray(v) ? v : [v];
@@ -163,7 +174,7 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   function buildCardHTML(hit) {
-    var photoUrl = hit.photo_url || "";
+    var photoUrl = safeUrl(hit.photo_url);
     var isNetwork = !!hit.is_elsee_network;
     var isNew = hit.network_new === true;
     var reimbursement = getReimbursement(hit);
@@ -249,7 +260,7 @@ window.addEventListener("DOMContentLoaded", function () {
     var prestationsDiv = '<div class="directory_card_prestations_container">' + prestasHtml + "</div>";
 
     return (
-      '<a href="' + esc(hit.url || "#") + '" class="directory_card_body">' +
+      '<a href="' + esc(safeUrl(hit.url) || "#") + '" class="directory_card_body">' +
         '<div class="directory_card_upper_container">' +
           '<div class="directory_card_header">' +
             photoDiv +

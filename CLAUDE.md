@@ -61,6 +61,10 @@ de déploiement. Une CI d'hygiène, la stack Claude Code commune, et ce fichier.
 | `new-members.js` | bloc « Nouveaux partenaires » : cartes de l'annuaire (`network_new:true`), 4 sur desktop et tablette, 12 sur mobile en défilement horizontal suivies d'une carte « voir plus » ; une rangée de catégories (facette `type`) au-dessus ; lien facultatif `#new_members_more` vers l'annuaire filtré (`?new=true`) | pas encore collé (2026-10-19) : balise jsDelivr épinglée sur un commit, avec `integrity`, sur la page qui accueille le bloc |
 | `elsee.js` | script global : accordéon FAQ, virgules des listes CMS, boutons `.funnelentry` | réglages du site |
 | `utils.js` | utilitaires de page : URL affichée, dates localisées, FAQ, virgules des listes CMS. Le formulaire multi-étapes qui postait à Make est retiré le 2026-10-19 : aucune page n'avait plus son `#customerForm`, et `/obtenir-mon-offre` poste à `leadWebflow` depuis un script collé dans la page | réglages du site, *Footer code*, balise jsDelivr épinglée sur un commit, avec `integrity` |
+| `obtenir-mon-offre.js` (+ `obtenir-mon-offre.css`) | formulaire principal (`mainForm`) et demande de devis (`quoteForm`) de `/obtenir-mon-offre`, postés à `leadWebflow` (`elsee_functions_v2`) ; téléphone avec intl-tel-input 17.0.12 | page `obtenir-mon-offre`, *Custom code* avant `</body>`, collé tel quel ; copie relevée en ligne le 2026-10-12 |
+| `offres-remboursement-elsee.js` | formulaire de la landing (`lp`), posté à `leadWebflow` | page `offres-remboursement-elsee`, *Custom code* avant `</body>` ; copie relevée en ligne le 2026-10-12 |
+| `remboursement-complements-alimentaires.js` | formulaire de la landing (`lp-complements`), posté à `leadWebflow` | page `remboursement-complements-alimentaires`, *Custom code* avant `</body>` ; copie relevée en ligne le 2026-10-12 |
+| `source-tracking.js` | provenance des visites dans le `localStorage` (`first_source`, `session_source`, `last_touch_url`), envoyée par le formulaire principal | réglages du site, *Custom code*, pied de page ; copie relevée en ligne le 2026-10-12 |
 
 Les emplacements exacts se lisent dans Webflow ; ce tableau se corrige dès qu'on les vérifie.
 

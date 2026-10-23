@@ -1,0 +1,31 @@
+/* obtenir-mon-offre.css — sélecteur de pays (intl-tel-input) du formulaire principal de
+   https://www.elsee.care/obtenir-mon-offre.
+   Copie relevée sur la page en ligne le 2026-10-12, sans modification : le <style> qui suit
+   le script d'obtenir-mon-offre.js dans le Custom code de la page, avant </body>. */
+
+.iti__country-list {
+  background-color: #f5f6f4;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 24px;
+}
+.iti__country {
+  margin-bottom: 0px;
+}
+.iti__divider {
+  border-bottom-color: #434343;
+}
+.iti__selected-flag {
+  padding-left: 12px;
+}
+.iti {
+  display: flex;
+  border-radius: 24px;
+}
+.iti__flag-container:hover {
+  background-color: #f5f6f4;
+  border-radius: 24px 0 0 24px;
+}
+.iti__country.iti__highlight {
+  border-radius: 24px;
+}

@@ -11,7 +11,6 @@
 
   // Carrousel
   document.addEventListener('DOMContentLoaded', function () {
-
     const slider = document.querySelector('.js-hero-slider');
     if (!slider) return;
 
@@ -50,15 +49,8 @@
     }
 
     function updatePosition(animate = true) {
-
       const offset = -(getSlideWidth() * currentIndex);
-
-      if (!animate) {
-        track.style.transition = "none";
-      } else {
-        track.style.transition = "transform 0.7s ease";
-      }
-
+      track.style.transition = animate ? "transform 0.7s ease" : "none";
       track.style.transform = `translateX(${offset}px)`;
     }
 
@@ -67,7 +59,6 @@
     ------------------------- */
 
     const dots = originalSlides.map((_, index) => {
-
       const dot = document.createElement('button');
       dot.classList.add('hero-dot');
 
@@ -75,7 +66,7 @@
 
       dot.addEventListener('click', () => {
         goToSlide(index + 1);
-        restartAutoplay();
+        startAutoplay();
       });
 
       dotsContainer.appendChild(dot);
@@ -84,16 +75,14 @@
     });
 
     function updateDots() {
-
       let dotIndex = currentIndex - 1;
 
       if (dotIndex < 0) dotIndex = originalSlides.length - 1;
       if (dotIndex >= originalSlides.length) dotIndex = 0;
 
-      dots.forEach((dot,i)=>{
+      dots.forEach((dot, i) => {
         dot.classList.toggle('is-active', i === dotIndex);
       });
-
     }
 
     /* -------------------------
@@ -116,9 +105,7 @@
     ------------------------- */
 
     track.addEventListener('transitionend', () => {
-
       if (slides[currentIndex].classList.contains('is-clone')) {
-
         if (currentIndex === slides.length - 1) {
           currentIndex = 1;
         }
@@ -137,6 +124,7 @@
     AUTOPLAY
     ------------------------- */
 
+    // Repart de zéro : un clic sur un point relance aussi le délai.
     function startAutoplay() {
       stopAutoplay();
       autoplayTimer = setInterval(nextSlide, AUTOPLAY_DELAY);
@@ -144,10 +132,6 @@
 
     function stopAutoplay() {
       if (autoplayTimer) clearInterval(autoplayTimer);
-    }
-
-    function restartAutoplay() {
-      startAutoplay();
     }
 
     /* -------------------------
@@ -164,22 +148,21 @@
     window.addEventListener('resize', () => {
       updatePosition(false);
     });
-  /* stop autoplay si l'utilisateur quitte l'onglet */
-  document.addEventListener("visibilitychange", () => {
 
-    if (document.hidden) {
-      stopAutoplay();
-    } else {
-      startAutoplay();
-    }
+    /* stop autoplay si l'utilisateur quitte l'onglet */
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAutoplay();
+      } else {
+        startAutoplay();
+      }
+    });
 
-  });
     /* -------------------------
     INIT
     ------------------------- */
 
     updatePosition(false);
     startAutoplay();
-
   });
 })();

@@ -18,8 +18,7 @@
   if (window.__elseeDevenirTherapeute) return;
   window.__elseeDevenirTherapeute = true;
 
-  // 1. Adresse de la fonction
-  // Adresse de la fonction : site de staging Webflow (*.webflow.io) → fonction de
+  // 1. Adresse de la fonction : site de staging Webflow (*.webflow.io) → fonction de
   // staging (Odoo de test) ; www.elsee.care → fonction de prod.
   window.THP_ENDPOINT = location.hostname.endsWith(".webflow.io")
     ? "https://europe-west1-appelsee-staging.cloudfunctions.net/sendTherapistLeadToMake"

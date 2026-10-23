@@ -10,20 +10,10 @@
   if (window.__elseeBienvenue) return;
   window.__elseeBienvenue = true;
 
-  // Lien vers la page de succès de l'app
-  // Fonction pour récupérer les paramètres de l'URL
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
-
-    // Récupère le paramètre 'odooid' de l'URL
-    const odooId = getQueryParam('odooid');
-
-    // Si le paramètre 'odooid' existe, on construit la nouvelle URL
-    if (odooId) {
-      const newUrl = `https://app.elsee.care/success?odooid=${odooId}`;
-      // On met à jour l'attribut href de l'élément avec l'ID 'urlSubs'
-      document.getElementById('urlSubs').setAttribute('href', newUrl);
-    }
+  // Lien vers la page de succès de l'app, si l'URL porte le paramètre odooid
+  const odooId = new URLSearchParams(window.location.search).get('odooid');
+  if (odooId) {
+    const newUrl = `https://app.elsee.care/success?odooid=${odooId}`;
+    document.getElementById('urlSubs').setAttribute('href', newUrl);
+  }
 })();

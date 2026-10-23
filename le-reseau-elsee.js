@@ -10,11 +10,11 @@
 
   // Titres coupés
   document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".is-program-title-network").forEach(function (element) {
-          let text = element.textContent.trim();
-          if (text.length > 100) {
-              element.textContent = text.substring(0, 97) + "...";
-          }
-      });
+    document.querySelectorAll(".is-program-title-network").forEach(function (element) {
+      const text = element.textContent.trim();
+      if (text.length > 100) {
+        element.textContent = text.substring(0, 97) + "...";
+      }
+    });
   });
 })();

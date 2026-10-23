@@ -11,27 +11,26 @@
 
   // Accordéon
   document.addEventListener("DOMContentLoaded", function () {
-      const accordionItems = document.querySelectorAll(".refund_accordion_item");
+    const accordionItems = document.querySelectorAll(".refund_accordion_item");
 
-      accordionItems.forEach((item, index) => {
-        const header = item.querySelector(".refund_accordion_header");
-        const content = item.querySelector(".refund_accordion_content");
-        const toggle = item.querySelector(".refund_accordion_toggle");
+    accordionItems.forEach((item, index) => {
+      const header = item.querySelector(".refund_accordion_header");
+      const content = item.querySelector(".refund_accordion_content");
+      const toggle = item.querySelector(".refund_accordion_toggle");
 
-        // Par défaut, ouvrir uniquement le premier item
-        if (index === 0) {
-          content.style.display = "block"; // Ouvre le premier item
-          toggle.classList.add("active"); // Active la rotation
-        } else {
-          content.style.display = "none"; // Ferme les autres items
-        }
+      // Par défaut, seul le premier item est ouvert (toggle en rotation)
+      if (index === 0) {
+        content.style.display = "block";
+        toggle.classList.add("active");
+      } else {
+        content.style.display = "none";
+      }
 
-        // Ajouter le comportement au clic
-        header.addEventListener("click", () => {
-          const isOpen = content.style.display === "block";
-          content.style.display = isOpen ? "none" : "block"; // Basculer ouverture/fermeture
-          toggle.classList.toggle("active", !isOpen); // Basculer la rotation du toggle
-        });
+      header.addEventListener("click", () => {
+        const isOpen = content.style.display === "block";
+        content.style.display = isOpen ? "none" : "block";
+        toggle.classList.toggle("active", !isOpen);
       });
     });
+  });
 })();

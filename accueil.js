@@ -34,7 +34,7 @@
 
   // 2. Compte à rebours
   document.addEventListener('DOMContentLoaded', function () {
-    // Date cible : 24/11/2025 12:00, heure de France (CET, UTC+1 en novembre)
+    // Date cible : 25/11/2025 12:00, heure de France (CET, UTC+1 en novembre)
     const targetDate = new Date('2025-11-25T12:00:00+01:00');
 
     if (isNaN(targetDate.getTime())) {

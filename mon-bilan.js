@@ -10,5 +10,5 @@
 
   // Source de l'iframe
   document.getElementById('bilan').src =
-      'https://europe-west1-appelsee-2k24.cloudfunctions.net/bilanBienEtre' + location.search;
+    'https://europe-west1-appelsee-2k24.cloudfunctions.net/bilanBienEtre' + location.search;
 })();

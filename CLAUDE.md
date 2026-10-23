@@ -74,6 +74,7 @@ sera écrasé au prochain collage.
 | `devenir-therapeute.js` | menu des métiers et envoi du formulaire praticien à `sendTherapistLeadToMake` | `pages/devenir-therapeute-elsee/head.html` |
 | `carte-cadeau.js` | défilement des logos, onglets, liens vers le panier de l'app (plans en dur) | `pages/carte-cadeau/footer.html` |
 | `reinitialisation-mot-de-passe.js` | réinitialisation du mot de passe par Firebase Auth (**auth : structurel**) | `embeds/reset-password.html` |
+| `longform.js` | le longform des landings (première question du formulaire de l'app, « Simuler mes économies ») sur n'importe quelle page : réponse et URL de la page (`source`) postées à `landingLongForm`, puis l'app à la question suivante (dev_ops D83) | `embeds/longform.html`, posé où on veut |
 | `video-presentation.js` | vidéo flottante de présentation (réglages sur la balise) | `embeds/video-presentation-accueil.html`, `embeds/video-presentation-avantages.html` |
 | `accueil.js`, `accordeon-remboursements.js`, `slider-hero.js`, `bienvenue.js`, `le-reseau-elsee.js`, `mon-bilan.js`, `defilement-logos.js` | logique d'une seule page (l'en-tête de chaque fichier dit laquelle) | `pages/<page>/…` ou `embeds/…` |
 

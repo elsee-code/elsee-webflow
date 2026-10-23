@@ -10,7 +10,8 @@
 // *.webflow.io), puis redirection vers app.elsee.care/signup, que l'envoi réussisse ou non.
 //
 // Les deux pages avaient chacune leur copie, qui ne différaient que par `formName` et le
-// paramètre `meta` de la redirection : ils passent sur la balise.
+// paramètre `meta` de la redirection : ils passent sur la balise <script>, collée en ligne par le
+// kit de collage ({{inline:…}} : le funnel ne dépend pas de jsDelivr).
 //   data-form-name  valeur `formName` envoyée à leadWebflow (obligatoire)
 //   data-meta       paramètre `meta` ajouté à l'URL de redirection (facultatif)
 // Le reste est repris à l'identique.

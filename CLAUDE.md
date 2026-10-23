@@ -105,9 +105,12 @@ Les emplacements se vérifient dans Webflow ; `webflow/` se corrige dès qu'un �
    et chaque script en ligne de `webflow/` (`scripts/ci/check-js-syntax.sh`, `check-webflow.mjs`) ;
    ne coller que ce qui est mergé et vert.
 6. **Une balise du dépôt est épinglée sur un commit, avec `integrity`, en `defer`.** Les scripts
-   écoutent `DOMContentLoaded` : chargés en `async`, ils pourraient ne jamais démarrer. Chaque fichier
-   se protège contre un double chargement, pas contre l'ancien bloc collé resté à côté : un
-   emplacement se remplace en entier.
+   écoutent `DOMContentLoaded` : chargés en `async`, ils pourraient ne jamais démarrer. Les
+   formulaires (`obtenir-mon-offre.js`, `formulaire-lp.js`, `devenir-therapeute.js`,
+   `reinitialisation-mot-de-passe.js`) sont collés **en ligne** par le kit (`{{inline:…}}`) : le funnel
+   et l'authentification ne dépendent pas de jsDelivr (choix de l'humain, 2026-10-23). Chaque fichier se
+   protège contre un double chargement, pas contre l'ancien bloc collé resté à côté : un emplacement
+   se remplace en entier.
 
 ## 3. Travailler
 

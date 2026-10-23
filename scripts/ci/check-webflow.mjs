@@ -4,9 +4,11 @@
 // Pour chaque fichier de webflow/ :
 //   - chaque {{jsdelivr:<fichier>}} et {{sri:<fichier>}} désigne un fichier .js suivi par git, et
 //     les deux marqueurs vont par paire dans la même balise ;
+//   - chaque {{inline:<fichier>}} est le seul contenu d'un <script> sans src, et le fichier ne
+//     contient ni « </script » ni « <!-- », qui fermeraient ou dérouteraient la balise ;
 //   - aucun autre marqueur {{…}} hors des modèles de champs CMS des blocs Embed des cartes ;
-//   - chaque <script> en ligne (hors JSON) se parse : collé dans Webflow, une erreur de syntaxe
-//     casse la page sans alerte ;
+//   - chaque <script> en ligne (hors JSON) se parse, fichiers {{inline:…}} compris : collé dans
+//     Webflow, une erreur de syntaxe casse la page sans alerte ;
 //   - aucune balise externe sans `integrity`, hors liste des fournisseurs qui n'en publient pas.
 // Appelé par check-js-syntax.sh. Sortie 0 si tout va bien, 1 sinon.
 
@@ -89,7 +91,7 @@ for (const f of files) {
 
   for (const m of html.matchAll(/\{\{([^}]*)\}\}/g)) {
     const marker = m[1];
-    const ref = /^(jsdelivr|sri):([A-Za-z0-9._-]+\.js)$/.exec(marker);
+    const ref = /^(jsdelivr|sri|inline):([A-Za-z0-9._-]+\.js)$/.exec(marker);
     if (ref) {
       if (!tracked.has(ref[2])) fail(f, `{{${marker}}} : ${ref[2]} n'est pas un fichier du dépôt`);
     } else if (!/^embeds\/fiche-carte-/.test(f.replace(/^webflow\//, ""))) {
@@ -110,8 +112,22 @@ for (const f of files) {
       continue;
     }
     if (/type="application\/ld\+json"/.test(attrs)) continue;
+    let code = body;
+    const inl = /^\{\{inline:([A-Za-z0-9._-]+\.js)\}\}$/.exec(body);
+    if (inl) {
+      if (!tracked.has(inl[1])) continue; // déjà signalé plus haut
+      code = readFileSync(inl[1], "utf8");
+      const lower = code.toLowerCase();
+      if (lower.includes("</script") || code.includes("<!--")) {
+        fail(f, `${inl[1]} contient « </script » ou « <!-- » : il ne peut pas être collé en ligne`);
+        continue;
+      }
+    } else if (body.includes("{{inline:")) {
+      fail(f, "{{inline:…}} doit être le seul contenu de sa balise <script>");
+      continue;
+    }
     try {
-      new vm.Script(body, { filename: f });
+      new vm.Script(code, { filename: f });
     } catch (e) {
       fail(f, `script en ligne qui ne se parse pas : ${e.message}`);
     }

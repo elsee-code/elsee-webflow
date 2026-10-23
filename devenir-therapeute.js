@@ -1,8 +1,9 @@
 // ============================================================================
 // devenir-therapeute.js — formulaire « Rejoindre le réseau » de /devenir-therapeute-elsee
 // ============================================================================
-// Réglages de la page, Custom code : ces trois blocs étaient dans l'en-tête ; la balise peut y
-// rester, en `defer`. Le CSS du menu reste dans l'en-tête (webflow/pages/devenir-therapeute-elsee/).
+// Réglages de la page, Custom code, en-tête : collé en ligne par le kit de collage ({{inline:…}},
+// le formulaire ne dépend pas de jsDelivr), comme les trois blocs qu'il réunit. Le CSS du menu
+// reste dans l'en-tête (webflow/pages/devenir-therapeute-elsee/).
 // Repris à l'identique :
 //   1. adresse de la fonction `sendTherapistLeadToMake` d'elsee_functions_v2 : staging depuis
 //      *.webflow.io, prod depuis www.elsee.care (window.THP_ENDPOINT) ;

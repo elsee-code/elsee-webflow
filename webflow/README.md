@@ -16,16 +16,26 @@ ou un modèle sans fichier n'a pas de code personnalisé.
 
 ## Les marqueurs
 
-Les balises des fichiers du dépôt s'écrivent avec deux marqueurs, jamais avec un commit en dur :
+Les fichiers du dépôt s'appellent par des marqueurs, jamais avec un commit en dur. Le cas général,
+une balise jsDelivr :
 
 ```html
 <script src="{{jsdelivr:utils.js}}" integrity="{{sri:utils.js}}" crossorigin="anonymous" defer></script>
 ```
 
-`scripts/kit-collage.mjs` les remplace par l'URL jsDelivr épinglée sur un commit et l'empreinte du
-fichier à ce commit. Toujours en `defer` : les scripts supposent qu'ils s'exécutent avant
-`DOMContentLoaded`. `scripts/ci/check-webflow.mjs` (CI) refuse un marqueur sans fichier, un `src` sans
-`integrity`, une balise du dépôt sans `defer` et un script en ligne qui ne se parse pas.
+Les formulaires (obtenir-mon-offre, landings, devenir thérapeute, reset-password) sont **collés en
+ligne** (choix de l'humain, 2026-10-23), pour que le funnel et l'authentification ne dépendent pas de
+jsDelivr. Le dépôt reste la source, le kit y met le contenu du fichier :
+
+```html
+<script data-form-name="lp">{{inline:formulaire-lp.js}}</script>
+```
+
+`scripts/kit-collage.mjs` remplace les marqueurs par l'URL jsDelivr épinglée sur un commit,
+l'empreinte du fichier à ce commit, ou son contenu. Une balise jsDelivr est toujours en `defer` : les
+scripts supposent qu'ils s'exécutent avant `DOMContentLoaded`. `scripts/ci/check-webflow.mjs` (CI)
+refuse un marqueur sans fichier, un `src` sans `integrity`, une balise du dépôt sans `defer`, un
+fichier en ligne qui contient `</script` ou `<!--`, et un script qui ne se parse pas.
 
 Restent collés en ligne, à dessein : les balises des fournisseurs (GTM, Enzuzo, Claydar, pixels Meta,
 Shop My Influence, conversion Google Ads), les feuilles de style, et le petit script `noindex` de

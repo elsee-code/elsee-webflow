@@ -2,10 +2,12 @@
 // kit-collage.mjs — produit, pour un commit, le code à coller dans Webflow.
 //
 // webflow/ décrit chaque emplacement de code personnalisé du site (réglages du site, des pages,
-// des modèles CMS, blocs Embed). Les balises des fichiers du dépôt y sont écrites avec deux
-// marqueurs : {{jsdelivr:<fichier>}} (l'URL jsDelivr) et {{sri:<fichier>}} (l'empreinte
-// `integrity`). Ce script les remplace par l'URL épinglée sur <commit> et l'empreinte sha384 du
-// fichier à ce commit, et écrit le résultat dans <dossier>, emplacement par emplacement.
+// des modèles CMS, blocs Embed). Les fichiers du dépôt y sont appelés par trois marqueurs :
+// {{jsdelivr:<fichier>}} (l'URL jsDelivr) et {{sri:<fichier>}} (l'empreinte `integrity`) dans une
+// balise, ou {{inline:<fichier>}} comme contenu d'un <script> collé en ligne (formulaires : ils ne
+// doivent pas dépendre de jsDelivr). Ce script les remplace par l'URL épinglée sur <commit>,
+// l'empreinte sha384 ou le contenu du fichier à ce commit, et écrit le résultat dans <dossier>,
+// emplacement par emplacement.
 //
 //   node scripts/kit-collage.mjs <commit> <dossier> [--verifier-jsdelivr]
 //
@@ -26,7 +28,7 @@ if (!ref || !outDir) {
 }
 const verifyCdn = flags.includes("--verifier-jsdelivr");
 const REPO = "elsee-code/elsee-webflow";
-const MARKER = /\{\{(jsdelivr|sri):([A-Za-z0-9._-]+\.js)\}\}/g;
+const MARKER = /\{\{(jsdelivr|sri|inline):([A-Za-z0-9._-]+\.js)\}\}/g;
 
 const sha = execFileSync("git", ["rev-parse", "--verify", `${ref}^{commit}`], { encoding: "utf8" }).trim();
 
@@ -37,13 +39,20 @@ function listFiles(dir) {
   });
 }
 
+const show = (file) => execFileSync("git", ["show", `${sha}:${file}`], { maxBuffer: 16 * 1024 * 1024 });
+
 const cache = new Map();
 function sri(file) {
-  if (!cache.has(file)) {
-    const bytes = execFileSync("git", ["show", `${sha}:${file}`], { maxBuffer: 16 * 1024 * 1024 });
-    cache.set(file, "sha384-" + createHash("sha384").update(bytes).digest("base64"));
-  }
+  if (!cache.has(file)) cache.set(file, "sha384-" + createHash("sha384").update(show(file)).digest("base64"));
   return cache.get(file);
+}
+
+// Contenu d'un fichier collé en ligne, sans le saut de ligne final. check-webflow.mjs a déjà
+// refusé un fichier qui contiendrait « </script » ou « <!-- » : il fermerait la balise.
+const inlined = new Set();
+function inline(file) {
+  inlined.add(file);
+  return show(file).toString("utf8").replace(/\n+$/, "");
 }
 const url = (file) => `https://cdn.jsdelivr.net/gh/${REPO}@${sha}/${file}`;
 
@@ -51,7 +60,9 @@ const sources = listFiles("webflow");
 let written = 0;
 for (const src of sources) {
   const text = readFileSync(src, "utf8");
-  const out = text.replace(MARKER, (_, kind, file) => (kind === "jsdelivr" ? url(file) : sri(file)));
+  const out = text.replace(MARKER, (_, kind, file) =>
+    kind === "jsdelivr" ? url(file) : kind === "sri" ? sri(file) : inline(file),
+  );
   const dest = join(outDir, relative("webflow", src));
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, out);
@@ -59,6 +70,7 @@ for (const src of sources) {
 }
 console.log(`${written} emplacements écrits dans ${outDir}, commit ${sha}`);
 console.log(`${cache.size} fichiers épinglés : ${[...cache.keys()].sort().join(", ")}`);
+console.log(`${inlined.size} fichiers collés en ligne : ${[...inlined].sort().join(", ")}`);
 
 if (verifyCdn) {
   let failed = 0;

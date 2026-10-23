@@ -8,7 +8,8 @@
 // signalée à la fonction `logPasswordResetError` d'elsee_functions_v2.
 //
 // Bloc Embed de la page, après le formulaire #reset-form : les deux balises du SDK Firebase
-// (app puis auth, sans `defer`), puis celle-ci en `defer` (webflow/embeds/reset-password.html).
+// (app puis auth, sans `defer`), puis ce script, collé en ligne par le kit de collage
+// ({{inline:…}} : la page ne dépend pas de jsDelivr ; webflow/embeds/reset-password.html).
 // La configuration Firebase ci-dessous est celle d'une application web : publique par
 // construction (elle est aussi dans le bundle de l'app), sans valeur secrète.
 //

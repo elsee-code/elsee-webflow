@@ -1,10 +1,10 @@
 // ============================================================================
 // obtenir-mon-offre.js — formulaires de la page https://www.elsee.care/obtenir-mon-offre
 // ============================================================================
-// Réglages de la page, Custom code, avant </body> : balise jsDelivr épinglée, en `defer`, après
-// les deux balises d'intl-tel-input 17.0.12 (cdnjs : js/intlTelInput.min.js puis
+// Réglages de la page, Custom code, avant </body> : collé en ligne par le kit de collage
+// ({{inline:…}}, le funnel ne dépend pas de jsDelivr), après les deux balises d'intl-tel-input 17.0.12 (cdnjs : js/intlTelInput.min.js puis
 // js/utils.min.js), qu'elle utilise. La feuille css/intlTelInput.min.css et le CSS des étapes
-// sont dans l'en-tête de la page, le CSS du sélecteur de pays dans le même bloc que la balise
+// sont dans l'en-tête de la page, le CSS du sélecteur de pays dans le même bloc que le script
 // (webflow/pages/obtenir-mon-offre/).
 //
 // Deux formulaires, postés à la fonction `leadWebflow` d'elsee_functions_v2 (celle de

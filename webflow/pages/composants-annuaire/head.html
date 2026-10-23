@@ -1,0 +1,42 @@
+<meta name="robots" content="noindex, nofollow">
+<style>
+/* Mobile uniquement */
+@media (max-width: 767px) {
+  html, body { overflow-x: hidden; }
+  .directory_main_wrapper,
+  .directory_main_column { overflow-x: hidden; }
+
+  .directory_categories_wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior: contain;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+
+    scroll-snap-type: x proximity;
+    scroll-padding-left: 24px;   /* snap côté gauche */
+    scroll-padding-right: 48px;  /* snap côté droit */
+
+    scrollbar-width: none;
+    scrollbar-gutter: stable;
+    padding: 0;
+    margin: 0;
+    inline-size: 100%;
+  }
+  .directory_categories_wrapper::-webkit-scrollbar { display: none; }
+
+  /* Spacers physiques : 12px à gauche, 48px à droite */
+  .directory_categories_wrapper::before { content: ""; flex: 0 0 24px; }
+  .directory_categories_wrapper::after  { content: ""; flex: 0 0 48px; }
+
+  .directory_category_tag_wrapper {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-width: max-content;
+  }
+}
+</style>

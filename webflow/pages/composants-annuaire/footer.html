@@ -1,0 +1,108 @@
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places" async defer></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const field = document.querySelector(".directory_search_fields");
+  const placeholder = field?.querySelector(".directory_search_placeholder");
+  const resultBox = document.querySelector("#maps_autocomplete");
+
+  if (!field || !placeholder || !resultBox) return;
+
+  // on fait en sorte que la div soit "focusable"
+  field.setAttribute("tabindex", "0");
+  field.style.cursor = "text";
+
+  // petit buffer pour les requêtes API
+  let typingTimer;
+  const service = new google.maps.places.AutocompleteService();
+  const sessionToken = new google.maps.places.AutocompleteSessionToken();
+
+  // pour suivre le texte tapé
+  let currentText = "";
+
+  // on crée un input caché juste pour capturer le clavier
+  const hiddenInput = document.createElement("input");
+  hiddenInput.type = "text";
+  hiddenInput.style.position = "absolute";
+  hiddenInput.style.opacity = 0;
+  hiddenInput.style.pointerEvents = "none";
+  hiddenInput.style.height = 0;
+  hiddenInput.style.width = 0;
+  document.body.appendChild(hiddenInput);
+
+  // quand on clique sur le champ visuel → focus le vrai input caché
+  field.addEventListener("click", () => {
+    field.classList.add("is-selected");
+    hiddenInput.focus();
+  });
+
+  // quand le champ perd le focus
+  hiddenInput.addEventListener("blur", () => {
+    field.classList.remove("is-selected");
+    if (!currentText) placeholder.textContent = "Où ? Adresse, ville ...";
+  });
+
+  // écoute la saisie
+  hiddenInput.addEventListener("input", (e) => {
+    currentText = e.target.value;
+    placeholder.textContent = currentText || "Où ? Adresse, ville ...";
+
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      if (currentText.length < 2) {
+        resultBox.style.display = "none";
+        resultBox.innerHTML = "";
+        return;
+      }
+
+      // requête à Google Places
+      service.getPlacePredictions(
+        {
+          input: currentText,
+          types: ["geocode"],
+          componentRestrictions: { country: ["fr"] },
+          sessionToken,
+        },
+        (predictions, status) => {
+          if (
+            status !== google.maps.places.PlacesServiceStatus.OK ||
+            !predictions?.length
+          ) {
+            resultBox.style.display = "none";
+            resultBox.innerHTML = "";
+            return;
+          }
+
+          // on construit les résultats
+          resultBox.innerHTML = predictions
+            .slice(0, 6)
+            .map(
+              (p) =>
+                `<div class="directory_search_result_text" data-place-id="${p.place_id}">
+                   ${p.description}
+                 </div>`
+            )
+            .join("");
+
+          resultBox.style.display = "flex";
+        }
+      );
+    }, 250);
+  });
+
+  // gestion du click sur un résultat
+  resultBox.addEventListener("click", (e) => {
+    const target = e.target.closest(".directory_search_result_text");
+    if (!target) return;
+
+    const description = target.textContent;
+    placeholder.textContent = description;
+    resultBox.style.display = "none";
+    hiddenInput.blur(); // ferme le focus
+    field.classList.remove("is-selected");
+
+    console.log("✅ Adresse sélectionnée :", description, target.dataset.placeId);
+    // ici, tu pourras ensuite récupérer placeId et faire un geocode détaillé
+  });
+});
+</script>

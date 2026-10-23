@@ -18,4 +18,8 @@ while IFS= read -r f; do
   if node --check "$out" 2>"$tmp/err"; then echo "✅ $f"; else echo "❌ $f"; sed "s#$out#$f#" "$tmp/err"; status=1; fi
 done < <(git ls-files '*.js')
 [ "$n" -gt 0 ] || { echo "✖ aucun fichier .js trouvé : le contrôle n'exerce rien"; exit 1; }
+
+# Le code à coller dans Webflow (webflow/) : balises du dépôt bien formées, scripts en ligne
+# qui se parsent, balises externes avec integrity.
+node scripts/ci/check-webflow.mjs || status=1
 exit "$status"

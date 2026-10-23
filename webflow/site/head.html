@@ -1,0 +1,51 @@
+<!-- Google Site Verification -->
+<meta name="google-site-verification" content="AkGSdTPMMBaGTOj1coqFKiTOeZM1oUoCKwlQQKQeV6Y" />
+
+<!-- Lite YouTube Embed CSS (non-bloquant) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.css" /></noscript>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Styles -->
+<style>
+  select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+  }
+
+  .faq_accordion_toggle {
+    transition: transform 0.3s ease;
+  }
+
+  .faq_accordion_toggle.active {
+    transform: rotate(180deg);
+  }
+
+  .faq_accordion_content {
+    display: none;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+</style>
+
+<!-- Deferred Scripts -->
+<script>
+  // ⚡ Charge les scripts marketing après 2 secondes (sans bloquer le thread principal)
+  setTimeout(function () {
+    // Google Tag Manager
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-5CNWQFC7');
+
+  }, 2000);
+
+  // ⚡ Charge Lite YouTube JS (non-bloquant)
+  setTimeout(function () {
+    const liteYT = document.createElement('script');
+    liteYT.type = 'module';
+    liteYT.src = "https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.js";
+    document.body.appendChild(liteYT);
+  }, 2000);
+</script>

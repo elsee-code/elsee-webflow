@@ -53,16 +53,31 @@ pas coller (ou ne pas changer le commit de la balise) ne met rien en ligne non p
 D'où une stack réduite (D33) : pas d'environnement GitHub, pas de compte de service, pas de workflow
 de déploiement. Une CI d'hygiène, la stack Claude Code commune, et ce fichier.
 
-| Fichier | Ce qu'il fait | Où il est collé |
-|---|---|---|
-| `algolia-search.js` | moteur de l'annuaire des partenaires : recherche, facettes (métiers, remboursement), options (nouveaux partenaires, visio, domicile), géolocalisation, cartes | page `lannuaire-des-partenaires-elsee`, balise jsDelivr épinglée (`@0b031c1`, avec `integrity`, lu en ligne le 2026-10-07) |
-| `maps-autocomplete.js` | champ « lieu » de l'annuaire : suggestions Google Places ; ville ou adresse = cercle de 20 km, département, région ou pays = rectangle de la zone ; appelle `window.applyGeoFilterFromMaps` du moteur | page `lannuaire-des-partenaires-elsee`, balise jsDelivr au **même commit** que `algolia-search.js` (`@0b031c1`, avec `integrity`) ; la balise Google Maps (avec sa clé) reste dans Webflow |
-| `network-search.js` | recherche simplifiée de la page d'accueil, qui renvoie vers l'annuaire ; charge `algoliasearch-lite` 4.10.5 et `instantsearch.js` 4.27.0 depuis jsDelivr | page d'accueil |
-| `new-members.js` | bloc « Nouveaux partenaires » : cartes de l'annuaire (`network_new:true`), 4 sur desktop et tablette, 12 sur mobile en défilement horizontal suivies d'une carte « voir plus » ; une rangée de catégories (facette `type`) au-dessus ; lien facultatif `#new_members_more` vers l'annuaire filtré (`?new=true`) | pas encore collé (2026-10-19) : balise jsDelivr épinglée sur un commit, avec `integrity`, sur la page qui accueille le bloc |
-| `elsee.js` | script global : accordéon FAQ, virgules des listes CMS, boutons `.funnelentry` | réglages du site |
-| `utils.js` | utilitaires de page : URL affichée, dates localisées, FAQ, virgules des listes CMS. Le formulaire multi-étapes qui postait à Make est retiré le 2026-10-19 : aucune page n'avait plus son `#customerForm`, et `/obtenir-mon-offre` poste à `leadWebflow` depuis un script collé dans la page | réglages du site, *Footer code*, balise jsDelivr épinglée sur un commit, avec `integrity` |
+Depuis le 2026-10-23, **tout le code personnalisé du site est dans ce dépôt** : les scripts à la racine,
+chargés par balise jsDelivr, et dans `webflow/` le contenu de chaque emplacement Webflow (site, pages,
+modèles CMS, blocs Embed), balises comprises. `webflow/README.md` dit comment produire le kit de collage
+d'un commit (`scripts/kit-collage.mjs`). Un code changé directement dans Webflow sans passer par ici
+sera écrasé au prochain collage.
 
-Les emplacements exacts se lisent dans Webflow ; ce tableau se corrige dès qu'on les vérifie.
+| Fichier | Ce qu'il fait | Où il est chargé (`webflow/…`) |
+|---|---|---|
+| `utils.js` | script global : provenance des visites (`first_source`, `session_source`, `last_touch_url`, lus par le formulaire principal), boutons `.funnelentry`, dates `.cms-date`, accordéon FAQ, URL de page, virgules des listes CMS | `site/footer.html`, toutes les pages |
+| `algolia-search.js`, `maps-autocomplete.js` | moteur de l'annuaire (recherche, facettes, options, géolocalisation, cartes) et champ « lieu » (Google Places) ; même commit pour les deux | `pages/lannuaire-des-partenaires-elsee/footer.html` (`@1a7b95e`, lu en ligne le 2026-10-23) |
+| `network-search.js` | recherche simplifiée de `/reseau-elsee`, qui renvoie vers l'annuaire | `pages/reseau-elsee/footer.html` |
+| `new-members.js` | bloc « Nouveaux partenaires » (`network_new:true`) | bloc Embed de l'accueil et de `/reseau-elsee` (`@4cda725`, lu en ligne le 2026-10-23) |
+| `simulateur-remboursement.js` | « Demander un remboursement » : calcul au taux et au plafond de la fiche, puis `signin_freemium` | `embeds/simulateur-remboursement.html`, modèles praticiens, salles de sport, marques, programmes, groupes sport |
+| `fiche-carte.js` | carte Google Maps d'une fiche, adresse lue dans `data-adresse` (et `data-lieu` pour les salles) | `embeds/fiche-carte-praticien.html`, `embeds/fiche-carte-salle.html` |
+| `modele-salle-de-sport.js`, `modele-marque.js`, `modele-programme.js`, `modele-mag.js`, `modele-ressource.js` | logique propre à chaque modèle CMS (listes du groupe, blocs vides masqués, virgules, sommaire, dates en français) | `modeles/<collection>/footer.html` |
+| `avis.js` | étoiles et note moyenne des avis ; sur `/avis`, grille Masonry et données structurées | `pages/avis/footer.html`, `modeles/partenaires/footer.html` |
+| `obtenir-mon-offre.js` | formulaire principal en étapes (`mainForm`) et devis (`quoteForm`), postés à `leadWebflow` | `pages/obtenir-mon-offre/footer.html` |
+| `formulaire-lp.js` | formulaire e-mail des landings, posté à `leadWebflow` (`data-form-name`, `data-meta` sur la balise) | `pages/offres-remboursement-elsee/footer.html`, `pages/remboursement-complements-alimentaires/footer.html` |
+| `devenir-therapeute.js` | menu des métiers et envoi du formulaire praticien à `sendTherapistLeadToMake` | `pages/devenir-therapeute-elsee/head.html` |
+| `carte-cadeau.js` | défilement des logos, onglets, liens vers le panier de l'app (plans en dur) | `pages/carte-cadeau/footer.html` |
+| `reinitialisation-mot-de-passe.js` | réinitialisation du mot de passe par Firebase Auth (**auth : structurel**) | `embeds/reset-password.html` |
+| `video-presentation.js` | vidéo flottante de présentation (réglages sur la balise) | `embeds/video-presentation-accueil.html`, `embeds/video-presentation-avantages.html` |
+| `accueil.js`, `accordeon-remboursements.js`, `slider-hero.js`, `bienvenue.js`, `le-reseau-elsee.js`, `mon-bilan.js`, `defilement-logos.js` | logique d'une seule page (l'en-tête de chaque fichier dit laquelle) | `pages/<page>/…` ou `embeds/…` |
+
+Les emplacements se vérifient dans Webflow ; `webflow/` se corrige dès qu'un écart est constaté.
 
 ## 2. Invariants
 
@@ -87,7 +102,12 @@ Les emplacements exacts se lisent dans Webflow ; ce tableau se corrige dès qu'o
    `elsee_index` ; l'index `_staging` (D7) sert à l'app sur staging. Un test se fait sur un brouillon
    de page Webflow non publié, ou en local (§ 3).
 5. **Une syntaxe cassée collée dans Webflow casse la page sans alerte.** La CI parse chaque fichier
-   (`scripts/ci/check-js-syntax.sh`) ; ne coller que ce qui est mergé et vert.
+   et chaque script en ligne de `webflow/` (`scripts/ci/check-js-syntax.sh`, `check-webflow.mjs`) ;
+   ne coller que ce qui est mergé et vert.
+6. **Une balise du dépôt est épinglée sur un commit, avec `integrity`, en `defer`.** Les scripts
+   écoutent `DOMContentLoaded` : chargés en `async`, ils pourraient ne jamais démarrer. Chaque fichier
+   se protège contre un double chargement, pas contre l'ancien bloc collé resté à côté : un
+   emplacement se remplace en entier.
 
 ## 3. Travailler
 
@@ -103,11 +123,11 @@ servie par `python3 -m http.server`, et le skill `webapp-testing` pour la captur
 partent vers la production en lecture seule : sans effet de bord.
 
 **Le circuit d'une modification** : branche `feat/<slug>`, `fix/<slug>` ou `claude/<slug>` → PR, CI
-verte → merge → **copier le fichier mergé** dans le bloc Webflow correspondant, ou mettre le commit
-mergé dans sa balise jsDelivr → publier le site depuis Webflow. Le retour arrière est le même geste,
-avec la version précédente du fichier (`git show <commit>~1:<fichier>`) ou le commit précédent dans
-la balise. Une session Claude prépare et merge ; le collage et la publication
-Webflow restent une action humaine, et le « Livré » le dit en une ligne avec le fichier à coller.
+verte → merge → `node scripts/kit-collage.mjs <commit> <dossier> --verifier-jsdelivr` → **remplacer
+tout le contenu** de chaque emplacement Webflow qui change par celui du kit → publier le site depuis
+Webflow. Le retour arrière est le même geste, avec le kit du commit précédent. Une session Claude
+prépare et merge ; le collage et la publication Webflow restent une action humaine, et le « Livré »
+le dit en une ligne avec les emplacements à remplacer.
 
 Préfixes de commit : `feat:` `fix:` `chore:` `docs:` `ci:`. Documentation en français.
 

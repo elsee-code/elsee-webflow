@@ -1,0 +1,16 @@
+<style>.overflow_management {
+    display: inline-block;
+    width: 2000px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+}
+
+.collection-item:after { 
+	content: ", "; 
+}
+
+.collection-item:last-child:after {
+	content: "";
+}
+</style>

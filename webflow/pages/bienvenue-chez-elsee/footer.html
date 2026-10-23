@@ -1,0 +1,42 @@
+<script src="{{jsdelivr:bienvenue.js}}" integrity="{{sri:bienvenue.js}}" crossorigin="anonymous" defer></script>
+
+<!-- Shop My Influence Checkout confirmation tag  -->
+<script type="text/javascript">
+  // Récupération des paramètres depuis l'URL
+  function getUrlParameter(name) {
+    name = name.replace(/[\\[\]]/g, '\\$&'); // échappe aussi \ (CodeQL) : sans effet sur 'value' et 'odooid'
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+    var results = regex.exec(window.location.href);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+
+  var smic = document.cookie.split('; ')?.find(cookie => cookie?.startsWith('smiclickId='))?.split('=')?.[1];
+  var apiKey = "prNJTD1_6WdnGDPbSVMmn9bDDcfAKZeCUjTOmX4";
+
+  // Récupération des valeurs depuis les paramètres d'URL (adapté à votre structure)
+  var amount = getUrlParameter('value');  // Au lieu de 'transaction_amount:value'
+  var order_num = getUrlParameter('odooid');  // Au lieu de 'transaction_id:odooid'
+
+  var smi_cart = [];
+  var image = document.createElement("img");
+  image.width = 1;
+  image.height = 1;
+
+  // Vérification que les paramètres existent avant de créer l'image
+  if (amount && order_num) {
+    image.src =
+      "https://us-central1-shopmyinfluens.cloudfunctions.net/pixelV3/img"
+      + "?api_key=" + apiKey
+      + "&smic=" + smic
+      + "&a=" + amount
+      + "&cr=EUR"
+      + "&ref=" + order_num
+      + "&smi_cart=" + smi_cart;
+    document.body.appendChild(image);
+  } else {
+    console.warn("Les paramètres 'value' ou 'odooid' sont manquants dans l'URL");
+  }
+</script>
+<!-- End Shop My Influence Checkout confirmation tag -->

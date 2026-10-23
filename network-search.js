@@ -1,11 +1,10 @@
-
-<!-- LIBS ALGOLIA -->
-<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.10.5/dist/algoliasearch-lite.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.27.0/dist/instantsearch.production.min.js"></script>
-<script>
 // ============================================================================
-// algolia-home-search.js - Page d'accueil simplifiée
+// network-search.js — recherche simplifiée de /reseau-elsee, qui renvoie vers l'annuaire
 // ============================================================================
+// Réglages de la page, Custom code, pied de page : balise jsDelivr épinglée, en `defer`, après
+// les balises d'algoliasearch-lite 4.10.5 et d'instantsearch.js 4.27.0
+// (webflow/pages/reseau-elsee/footer.html). Jusqu'au 2026-10-23, ce fichier était le bloc
+// collé lui-même, balises de bibliothèques comprises ; le script n'a pas changé.
 
 window.addEventListener("DOMContentLoaded", function () {
   // 1. CONSTANTES ------------------------------------------------------------
@@ -395,4 +394,3 @@ window.addEventListener("DOMContentLoaded", function () {
 
   initAlgoliaHome();
 });
-</script>

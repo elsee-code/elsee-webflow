@@ -1,0 +1,193 @@
+<style>
+  .directory_search_placeholder {
+    position: relative;
+  }
+  .fake-caret {
+    display: inline-block;
+    width: 1px;
+    height: 1.1em;
+    background: currentColor;
+    margin-left: 2px;
+    vertical-align: baseline;
+    animation: blink 1s steps(1) infinite;
+  }
+  
+  .directory_card_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  column-gap: var(--s);
+  row-gap: var(--s);
+}
+
+.directory_card_container {
+  padding-top: var(--m);
+  padding-right: var(--m);
+  padding-bottom: var(--m);
+  padding-left: var(--m);
+  justify-content: space-between;
+  align-items: stretch;
+  column-gap: var(--s);
+  row-gap: var(--s);
+  border-top-left-radius: var(--m);
+  border-top-right-radius: var(--m);
+  border-bottom-left-radius: var(--m);
+  border-bottom-right-radius: var(--m);
+  background-color: var(--white);
+  font-size: var(--fontsize_s);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.directory_card_container.-wfp-hover,
+.directory_card_container:hover {
+  box-shadow: 0 3px 9px 0 var(--dark_green_op_30);
+}
+
+.directory_card_partner_short_desc p{
+  font-size: var(--fontsize_s);
+}
+/* le tooltip placé sous l’icône */
+.directory_remote_icon .tooltip,
+.directory_at_home_icon .tooltip {
+  position: absolute;
+  top: calc(100% + 8px);   /* 8px d’espace sous le rond */
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  z-index: 20;
+  pointer-events: auto;
+  /* tu as dit que le style interne est déjà prêt,
+     donc je ne touche pas à: background, radius, padding... */
+}
+
+/* montrer au hover de l’icône */
+.directory_remote_icon:hover .tooltip,
+.directory_at_home_icon:hover .tooltip {
+  display: block;
+}
+
+/* permettre de rester affiché pendant qu’on survole le tooltip lui-même */
+.directory_remote_icon .tooltip:hover,
+.directory_at_home_icon .tooltip:hover {
+  display: block;
+}
+
+
+
+/*searchBox start*/   
+    .ais-SearchBox-reset {
+    margin-right: 10px !importante;
+    top: 10px;
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50px;
+    background-color: var(--dark-green-30);
+    color: var(--mustrad_24) !important;
+    }
+    .ais-SearchBox-reset:hover {
+    
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50px;
+    background-color: var(--terracota);
+    color: var(--white) !important;
+    }
+		.ais-SearchBox-submit {
+      display: none !important;
+    }
+    .ais-SearchBox-reset {
+      right: 0;
+    }
+    .ais-SearchBox-submit{
+  		display: none;
+		}
+    .hero-dot {
+  min-width: 12px;
+  height: 12px;
+  border-radius: 50% !important;
+  border: none;
+  padding: 0;
+  background: var(--light-ivory-60);
+  cursor: pointer;
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+}
+		.hero-dot.is-active {
+  border-radius: 50% !important;
+  background: var(--light-ivory-90) !important;
+}
+
+		
+    
+/* GLOBAL CSS*/  
+
+
+	ol {
+    grid-column-gap: 12px;
+    grid-row-gap: 12px;
+    grid-template-rows: auto;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-columns: 1fr;
+    padding-left: 0;
+    list-style-type: none;
+    display: grid;
+    }
+@media (max-width: 768px) {
+
+  /* 1. La section qui contient ton catalogue :
+     elle ne doit PAS scroller horizontalement */
+  .all_sections.is-half-padding.is-dg10 {
+    display: block !important;
+    overflow-x: hidden !important;  /* empêche le scroll horizontal de la section */
+    width: 100% !important;
+  }
+
+  /* 2. Le wrapper interne : pas de scroll ici non plus */
+  .all_sections.is-half-padding.is-dg10 .main_section_wrapper_large {
+    display: block !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+  }
+
+  .all_sections.is-half-padding.is-dg10 .horizontal_scroll_wrapper {
+    overflow: hidden !important;    /* on verrouille bien le parent */
+  }
+
+  /* 3. Scroll uniquement sur le catalogue */
+  .all_sections.is-half-padding.is-dg10 .directory_h_scroll {
+    display: flex !important;
+    flex-direction: row;
+    gap: 1.5rem;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 24px;   /* le snap commence après les 24px */
+
+    padding-left: 24px;          /* espace avant la 1re carte, qui scroll */
+    padding-right: 24px;         /* pour que la dernière ne soit pas coupée */
+    padding-bottom: 1rem;
+
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .all_sections.is-half-padding.is-dg10 .directory_h_scroll .directory_tabs-cards {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  .ais-SearchBox-input {
+  font-size: 16px;
+  width:100%;
+  }
+}
+
+
+
+</style>

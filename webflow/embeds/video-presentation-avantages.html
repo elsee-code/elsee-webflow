@@ -1,0 +1,201 @@
+<!-- Bloc Embed « videos_embed » de la page /avantages : remplacer tout son contenu par ce qui suit. -->
+
+<div id="psWidget" class="ps-widget is-hidden">
+  <button id="psClose" class="ps-close" type="button" aria-label="Fermer">×</button>
+
+  <div class="ps-inner">
+    <video
+      id="psVideo"
+      class="ps-video"
+      muted
+      playsinline
+      preload="none"
+    ></video>
+
+    <div id="psProgress" class="ps-progress" aria-hidden="true">
+      <div id="psProgressBar" class="ps-progress-bar"></div>
+    </div>
+
+    <button id="psControl" class="ps-control is-preview" type="button" aria-label="Lire la vidéo">
+      <i id="psIcon" class="fa-solid fa-play"></i>
+    </button>
+
+    <div id="psActionButtons" class="ps-action-buttons" aria-hidden="true">
+      <button id="psHowItWorks" type="button" class="video_buttons">Elsee, qu'est ce que c'est ?</button>
+      <a href="https://www.elsee.care/reseau-elsee" class="video_buttons">Le réseau</a>
+      <a href="https://www.elsee.care/obtenir-mon-offre?url=video_home" class="video_buttons">Voir les tarifs</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.ps-widget {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  width: 220px;
+  z-index: 9999;
+  background: #000;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.ps-widget.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ps-widget.is-hidden {
+  pointer-events: none;
+}
+
+.ps-inner {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: #000;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.ps-video {
+  width: 100%;
+  height: calc(100% + 2px);
+  object-fit: cover;
+  display: block;
+  vertical-align: top;
+  transform: translateY(-1px);
+}
+
+.ps-progress {
+  position: absolute;
+  top: 12px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: rgba(255,255,255,.1);
+  border-radius: 999px;
+  overflow: hidden;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ps-progress.is-visible {
+  opacity: 1;
+}
+
+.ps-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #fff;
+  border-radius: 999px;
+  transition: width .1s linear;
+}
+
+.ps-control {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.ps-control i {
+  font-size: 18px;
+  color: #fff;
+}
+
+.ps-control.is-preview {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.ps-control.is-playing {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(.9);
+}
+
+.ps-inner:hover .ps-control.is-playing {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.ps-control.is-paused {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.ps-close {
+  position: absolute;
+  top: 20px;
+  right: 8px;
+  z-index: 5;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bloc boutons */
+.ps-action-buttons {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.ps-action-buttons.is-visible {
+  display: flex;
+}
+
+.ps-action-buttons .video_buttons {
+  line-height: normal;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .ps-widget {
+    width: 160px;
+    left: 12px;
+    bottom: 12px;
+  }
+}
+</style>
+
+<script src="{{jsdelivr:video-presentation.js}}" integrity="{{sri:video-presentation.js}}" crossorigin="anonymous"
+  data-apercu="https://firebasestorage.googleapis.com/v0/b/appelsee-2k24.appspot.com/o/interne%2F0%20HEC%20Janvier%202026%20Vide%CC%81o%202%20light%20short.mp4?alt=media&amp;token=18a9c3ea-b6c0-4d41-802e-5febc3721356"
+  data-principale="https://firebasestorage.googleapis.com/v0/b/appelsee-2k24.appspot.com/o/interne%2F0%20HEC%20Janvier%202026%20Vide%CC%81o%202%20light.mp4?alt=media&amp;token=4e22a7ef-e189-4de1-930c-781073ebc78d"
+  data-secondaire="https://firebasestorage.googleapis.com/v0/b/appelsee-2k24.appspot.com/o/interne%2F0%20Vide%CC%81o%20Home%20light.mp4?alt=media&amp;token=40c3da99-e65a-4f14-86ac-9762573686e4"
+  data-libelle-secondaire="Elsee, qu'est ce que c'est ?"
+  data-libelle-principale="Comment ça marche ?"
+  data-variante-secondaire="alternate"
+  defer></script>

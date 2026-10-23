@@ -1,0 +1,62 @@
+<!-- Bloc Embed de la page /remboursement-complements-alimentaires (bandeau de logos) : remplacer tout son contenu par ce qui suit. -->
+
+<style>
+.lp-selected {
+  background: #f6c9c3;
+}
+
+.logo-marquee {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* dégradé optionnel sur les bords */
+.logo-marquee::before,
+.logo-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.logo-marquee::before { left: 0;  background: linear-gradient(to right, #fff, transparent); }
+.logo-marquee::after  { right: 0; background: linear-gradient(to left,  #fff, transparent); }
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: scroll-left 30s linear infinite;
+}
+
+/* la Collection List doit être en flex, sans wrap */
+.marquee-track .w-dyn-items {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.marquee-track .w-dyn-item {
+  flex: 0 0 auto;
+  padding: 0 40px; /* espacement entre logos */
+}
+
+.marquee-track img {
+  height: 40px;
+  width: auto;
+  display: block;
+}
+
+@keyframes scroll-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* pause au survol (optionnel) */
+.logo-marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+</style>
+<script src="{{jsdelivr:defilement-logos.js}}" integrity="{{sri:defilement-logos.js}}" crossorigin="anonymous" defer></script>

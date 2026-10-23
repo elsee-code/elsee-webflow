@@ -1,0 +1,23 @@
+<style>
+.refund_accordion_content {
+  display: none;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.refund_accordion_content.open {
+  display: block;
+  max-height: 700px; /* Ajustez selon la taille maximale prévue */
+  transition: max-height 0.3s ease;
+}
+
+
+.refund_accordion_toggle {
+  transition: transform 0.3s ease;
+}
+
+.refund_accordion_toggle.active {
+  transform: rotate(180deg); /* Rotation de l'icône active */
+}
+
+</style>

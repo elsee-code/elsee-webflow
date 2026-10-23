@@ -12,8 +12,9 @@
 // La configuration Firebase ci-dessous est celle d'une application web : publique par
 // construction (elle est aussi dans le bundle de l'app), sans valeur secrète.
 //
-// Repris à l'identique du bloc collé (relevé le 2026-10-23), sans aucun changement de code.
-// Page d'authentification : toute modification est structurelle (dev_ops:standards/securite.md
+// Repris à l'identique du bloc collé (relevé le 2026-10-23), à un champ près : le journal
+// d'erreur n'envoie plus le code du lien (oobCode), encore valable après une erreur comme
+// « mot de passe trop court ». Page d'authentification : toute modification est structurelle (dev_ops:standards/securite.md
 // § 5) et passe par une revue de sécurité.
 
 (function () {
@@ -49,7 +50,8 @@
           email: email || param("email") || null,
           errorCode: code || null,
           errorMessage: message || null,
-          oobCode: oobCode,
+          // Pas d'oobCode : tant qu'il n'a pas expiré, il suffit à changer le mot de passe, et
+          // logPasswordResetError l'enregistrait en clair dans Firestore (passwordResetErrors).
           context: context
         })
       }).catch(function () {});

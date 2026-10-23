@@ -1,0 +1,153 @@
+<!--NO FOLLOW PARAMS-->
+<script>
+  (function () {
+    if (window.location.search.length > 0) {
+      const robots = document.createElement('meta');
+      robots.name = 'robots';
+      robots.content = 'noindex,follow';
+      document.head.appendChild(robots);
+
+      const canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      canonical.href = window.location.origin + window.location.pathname;
+      document.head.appendChild(canonical);
+    }
+  })();
+</script>
+
+
+<style>
+  .directory_search_placeholder {
+    position: relative;
+  }
+  .fake-caret {
+    display: inline-block;
+    width: 1px;
+    height: 1.1em;
+    background: currentColor;
+    margin-left: 2px;
+    vertical-align: baseline;
+    animation: blink 1s steps(1) infinite;
+  }
+  
+  .directory_card_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  column-gap: var(--s);
+  row-gap: var(--s);
+}
+
+.directory_card_container {
+  padding-top: var(--m);
+  padding-right: var(--m);
+  padding-bottom: var(--m);
+  padding-left: var(--m);
+  justify-content: space-between;
+  align-items: stretch;
+  column-gap: var(--s);
+  row-gap: var(--s);
+  border-top-left-radius: var(--m);
+  border-top-right-radius: var(--m);
+  border-bottom-left-radius: var(--m);
+  border-bottom-right-radius: var(--m);
+  background-color: var(--white);
+  font-size: var(--fontsize_s);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.directory_card_container.-wfp-hover,
+.directory_card_container:hover {
+  box-shadow: 0 3px 9px 0 var(--dark_green_op_30);
+}
+
+.directory_card_partner_short_desc p{
+  font-size: var(--fontsize_s);
+}
+/* le tooltip placé sous l’icône */
+.directory_remote_icon .tooltip,
+.directory_at_home_icon .tooltip {
+  position: absolute;
+  top: calc(100% + 8px);   /* 8px d’espace sous le rond */
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  z-index: 20;
+  pointer-events: auto;
+  /* tu as dit que le style interne est déjà prêt,
+     donc je ne touche pas à: background, radius, padding... */
+}
+
+/* montrer au hover de l’icône */
+.directory_remote_icon:hover .tooltip,
+.directory_at_home_icon:hover .tooltip {
+  display: block;
+}
+
+/* permettre de rester affiché pendant qu’on survole le tooltip lui-même */
+.directory_remote_icon .tooltip:hover,
+.directory_at_home_icon .tooltip:hover {
+  display: block;
+}
+
+
+
+/*searchBox start*/   
+    .ais-SearchBox-reset {
+    margin-right: 10px !important;
+    top: 10px;
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50px;
+    background-color: var(--dark-green-30);
+    color: var(--mustrad_24) !important;
+    }
+    .ais-SearchBox-reset:hover {
+    
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50px;
+    background-color: var(--terracota);
+    color: var(--white) !important;
+    }
+		.ais-SearchBox-submit {
+      display: none !important;
+    }
+    .ais-SearchBox-reset {
+      right: 0;
+    }
+    .ais-SearchBox-submit{
+  		display: none;
+		}
+
+    
+/* GLOBAL CSS*/  
+    ol {
+      grid-column-gap: 12px;
+      grid-row-gap: 12px;
+      grid-template-rows: auto;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-auto-columns: 1fr;
+      padding-left: 0;
+      list-style-type: none;
+      display: grid;
+      }
+    
+@media (max-width: 768px) {
+		ol {
+      grid-template-columns: 1fr;
+    	}
+    .ais-SearchBox-input {
+      font-size: 18px;
+      width:100%;
+      background:#FFFFFF;
+      }
+
+		#brevo-conversations {
+  		z-index: 100 !important;
+			}
+}
+</style>

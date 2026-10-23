@@ -3,7 +3,9 @@
 # défaut de gitleaks, plus les exceptions ci-dessous, chacune justifiée. Une exception
 # nouvelle se justifie ici, en PR ; jamais par un `--exclude` dans le workflow.
 #
-# Relevé du 2026-09-24 : 2 signalements, tous deux la clé de RECHERCHE Algolia.
+# Relevé du 2026-09-24 : 2 signalements, tous deux la clé de RECHERCHE Algolia. Le 2026-10-23,
+# avec le code collé dans Webflow rapatrié : 3 de plus, la clé web Firebase et la clé du pixel Shop
+# My Influence, et les jetons d'URL Storage des vidéos de présentation, publics eux aussi.
 title = "elsee-webflow"
 
 [extend]
@@ -13,3 +15,18 @@ useDefault = true
 description = "Clé de RECHERCHE Algolia (lecture seule sur les index publics) : faite pour le navigateur, comme dans webapp"
 regexTarget = "line"
 regexes = ['''ALGOLIA_SEARCH_KEY\s*=\s*"[0-9a-f]{32}"''']
+
+[[allowlists]]
+description = "Configuration Firebase d'application WEB (apiKey AIza…) de reinitialisation-mot-de-passe.js : publique par construction, servie à tout navigateur sur /reset-password et dans le bundle de l'app ; les droits sont dans les règles Firestore et l'auth, pas dans cette clé (relevé du 2026-10-23)"
+regexTarget = "line"
+regexes = ['''^\s*apiKey: "AIzaSyDhz3TtutV09ePCF6zsxAALRglQxtKiLOk",$''']
+
+[[allowlists]]
+description = "Clé du pixel Shop My Influence (affiliation) des balises de /bienvenue-chez-elsee recopiées dans webflow/ : identifiant de pixel public, servi tel quel dans la page (relevé du 2026-10-23)"
+regexTarget = "line"
+regexes = ['''^\s*var apiKey = "prNJTD1_6WdnGDPbSVMmn9bDDcfAKZeCUjTOmX4";$''']
+
+[[allowlists]]
+description = "Jetons d'URL Firebase Storage des vidéos de présentation (dossier interne/ du bucket de prod), dans les réglages de video-presentation.js (webflow/embeds/) : liens de téléchargement de vidéos publiques, servis tels quels sur l'accueil et /avantages, comme dans webapp (relevé du 2026-10-23)"
+regexTarget = "line"
+regexes = ['''^\s*data-[a-z]+="https://firebasestorage\.googleapis\.com/v0/b/appelsee-2k24\.appspot\.com/o/interne%2F[^"]*&amp;token=[0-9a-f-]{36}"$''']

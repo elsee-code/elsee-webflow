@@ -38,6 +38,21 @@ if (files.length === 0) {
   process.exit(1);
 }
 
+// Retire les commentaires HTML <!-- … --> par recherche de bornes, sans expression régulière : un
+// commentaire non fermé coupe le reste du fichier, comme le ferait le navigateur.
+function withoutComments(text) {
+  let out = "";
+  let i = 0;
+  for (;;) {
+    const start = text.indexOf("<!--", i);
+    if (start < 0) return out + text.slice(i);
+    out += text.slice(i, start);
+    const end = text.indexOf("-->", start + 4);
+    if (end < 0) return out;
+    i = end + 3;
+  }
+}
+
 let errors = 0;
 const fail = (f, msg) => {
   errors++;
@@ -47,7 +62,7 @@ const fail = (f, msg) => {
 for (const f of files) {
   const text = readFileSync(f, "utf8");
   // HTML en commentaire (consignes de collage) : ignoré pour les contrôles qui suivent.
-  const html = text.replace(/<!--[\s\S]*?-->/g, "");
+  const html = withoutComments(text);
 
   for (const m of html.matchAll(/\{\{([^}]*)\}\}/g)) {
     const marker = m[1];
@@ -59,7 +74,7 @@ for (const f of files) {
     }
   }
 
-  for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
+  for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
     const attrs = m[1];
     const body = m[2];
     const src = /\bsrc="([^"]+)"/.exec(attrs)?.[1];

@@ -4,7 +4,7 @@
 <script type="text/javascript">
   // Récupération des paramètres depuis l'URL
   function getUrlParameter(name) {
-    name = name.replace(/[\[\]]/g, '\\$&');
+    name = name.replace(/[\\[\]]/g, '\\$&'); // échappe aussi \ (CodeQL) : sans effet sur 'value' et 'odooid'
     var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
     var results = regex.exec(window.location.href);
     if (!results) return null;

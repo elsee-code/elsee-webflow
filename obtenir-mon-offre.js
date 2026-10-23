@@ -15,8 +15,10 @@
 // classe .slide.active) : ne pas renommer #formSlider ni le motif des id `slide-<n>`.
 //
 // Copie du bloc collé dans Webflow, relevée en ligne le 2026-10-12 et vérifiée identique le
-// 2026-10-23 ; seuls changent la garde contre un double chargement et un commentaire faux
-// (« Make » : les leads partent à leadWebflow).
+// 2026-10-23 ; seuls changent la garde contre un double chargement, un commentaire faux
+// (« Make » : les leads partent à leadWebflow) et l'encodage de persona et price dans les deux
+// URL de l'app (codes fixes comme ME ou 39 : l'encodage ne change rien, il ferme la porte à une
+// valeur de bouton radio qui sortirait de l'URL).
 
 (function () {
   if (window.__elseeObtenirMonOffre) return;
@@ -265,14 +267,14 @@
         const consent = consentCheckbox ? consentCheckbox.checked : false;
 
         if (persona && budget && email && firstName) {
-          const redirect = `https://app.elsee.care/signup?persona=${persona}&price=${budget}` +
+          const redirect = `https://app.elsee.care/signup?persona=${encodeURIComponent(persona)}&price=${encodeURIComponent(budget)}` +
             `&email=${encodeURIComponent(email)}` +
             `&firstname=${encodeURIComponent(firstName)}` +
             `&lastname=${encodeURIComponent(lastName || '')}` +
             `&allPersona=${encodeURIComponent(interests || '')}` +
             `&source=miniform`;
 
-          const makeDestination = `https://app.elsee.care/mon-offre?persona=${persona}&price=${budget}` +
+          const makeDestination = `https://app.elsee.care/mon-offre?persona=${encodeURIComponent(persona)}&price=${encodeURIComponent(budget)}` +
             `&email=${encodeURIComponent(email)}` +
             `&firstname=${encodeURIComponent(firstName)}` +
             `&lastname=${encodeURIComponent(lastName || '')}` +

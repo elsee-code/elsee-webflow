@@ -53,6 +53,29 @@ function withoutComments(text) {
   }
 }
 
+// Balises <script> du fichier, par recherche de bornes (casse ignorée) : une fermeture
+// « </script …> » s'arrête au premier « > », comme dans le navigateur.
+function* scriptTags(html) {
+  const lower = html.toLowerCase();
+  let i = 0;
+  for (;;) {
+    const open = lower.indexOf("<script", i);
+    if (open < 0) return;
+    const next = lower[open + 7];
+    if (next !== ">" && !/\s/.test(next ?? "")) {
+      i = open + 7;
+      continue;
+    }
+    const openEnd = lower.indexOf(">", open);
+    const close = openEnd < 0 ? -1 : lower.indexOf("</script", openEnd);
+    if (close < 0) return;
+    const closeEnd = lower.indexOf(">", close);
+    yield { attrs: html.slice(open + 7, openEnd), body: html.slice(openEnd + 1, close) };
+    if (closeEnd < 0) return;
+    i = closeEnd + 1;
+  }
+}
+
 let errors = 0;
 const fail = (f, msg) => {
   errors++;
@@ -74,9 +97,7 @@ for (const f of files) {
     }
   }
 
-  for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
-    const attrs = m[1];
-    const body = m[2];
+  for (const { attrs, body } of scriptTags(html)) {
     const src = /\bsrc="([^"]+)"/.exec(attrs)?.[1];
     if (src) {
       const j = /^\{\{jsdelivr:([^}]+)\}\}$/.exec(src);

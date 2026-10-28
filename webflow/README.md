@@ -45,8 +45,9 @@ des pages `/bienvenue-chez-elsee` et `/inscription`, les feuilles de style, et l
 `consentement.js`, la bannière maison, selon les finalités acceptées. Un pixel publicitaire collé dans
 une page s'écrit `<script type="text/plain" data-elsee-consentement="pixels">` : `consentement.js`
 l'exécute après l'accord à « Publicité et réseaux sociaux », jamais avant. Pas de `<noscript>` de
-traceur : il ne peut pas attendre un accord. Le lien « Gérer mes cookies » du pied de page pointe
-vers `#gerer-mes-cookies`.
+traceur : il ne peut pas attendre un accord. Le lien « Gérer mes cookies » du pied de page est posé
+par `consentement.js`, avant « Politique de confidentialité » ; tout autre lien vers
+`#gerer-mes-cookies` ouvre aussi les préférences.
 
 La clé Google Maps n'est pas dans le dépôt : `CLE_GOOGLE_MAPS` désigne celle qui est déjà dans Webflow.
 

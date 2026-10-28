@@ -539,7 +539,23 @@
   // lui-même : il attend la réponse à la bannière, sans rien envoyer.
   else if (window.posthog) window.posthog.clear_opt_in_out_capturing();
 
+  // Spec PRODUCT-1270 : « Il doit aussi exister un lien « Gérer mes cookies » dans le footer. »
+  // Posé avant « Politique de confidentialité » dans chaque pied de page, au format de ses voisins
+  // (« Mentions légales - », « CGU / CGV - ») et avec leur classe.
+  function ajouterLienPiedDePage() {
+    var liens = document.querySelectorAll('footer a[href$="/politique-confidentialite"]');
+    Array.prototype.forEach.call(liens, function (politique) {
+      if (politique.parentNode.querySelector('a[href="' + ANCRE + '"]')) return;
+      var lien = document.createElement("a");
+      lien.href = ANCRE;
+      lien.className = politique.className;
+      lien.textContent = "Gérer mes cookies -";
+      politique.parentNode.insertBefore(lien, politique);
+    });
+  }
+
   function demarrerInterface() {
+    ajouterLienPiedDePage();
     if (choix) afficherDock();
     else afficherBanniere();
     if (location.hash === ANCRE) ouvrirModale();

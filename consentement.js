@@ -257,8 +257,6 @@
     "#elsee-cookies .ec-finalite-tete{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}" +
     "#elsee-cookies .ec-finalite h3{font:600 16px/1.3 Montserrat,sans-serif}" +
     "#elsee-cookies .ec-finalite p{font-size:12px;line-height:1.6;color:var(--ec-muted)}" +
-    "#elsee-cookies .ec-finalite p+p{margin-top:8px}" +
-    "#elsee-cookies .ec-finalite b{font-weight:600;color:var(--ec-ink)}" +
     "#elsee-cookies .ec-badge{flex:none;font:500 12px/1.3 Montserrat,sans-serif;color:#035A52;background:rgba(0,186,169,.12);border-radius:999px;padding:4px 12px}" +
     "#elsee-cookies .ec-switch{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:transparent;" +
     "font:500 12px/1 Montserrat,sans-serif;color:var(--ec-ink);cursor:pointer}" +
@@ -362,7 +360,6 @@
               '<div class="ec-finalite-tete"><h3>Strictement nécessaires</h3><span class="ec-badge">Toujours actifs</span></div>' +
               "<p>Indispensables au fonctionnement du site et de votre espace membre : connexion, sécurité, " +
               "mémorisation de vos choix cookies. Ils ne nécessitent pas votre accord.</p>" +
-              "<p><b>Exemples :</b> session, sécurité, consentement</p>" +
             "</div>" +
             FINALITES.map(function (f) {
               return carteFinalite(f, choix);

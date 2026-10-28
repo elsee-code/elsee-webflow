@@ -189,22 +189,19 @@
       texte:
         "Nous aident à comprendre comment le site est utilisé (pages vues, parcours, clics) pour " +
         "l'améliorer. Si vous refusez, nous comptons seulement les visites, sans cookie et sans " +
-        "enregistrer votre navigation.",
-      exemples: "PostHog, Google Analytics"
+        "enregistrer votre navigation."
     },
     personnalisation: {
       titre: "Personnalisation",
       texte:
         "Adaptent le site à vos préférences et affichent des services tiers, comme le chat et les " +
-        "avis de nos membres.",
-      exemples: "chat Brevo, avis Trustpilot"
+        "avis de nos membres."
     },
     publicite: {
       titre: "Publicité et réseaux sociaux",
       texte:
         "Mesurent l'efficacité de nos publicités et vous proposent des contenus adaptés sur " +
-        "d'autres sites et sur les réseaux sociaux.",
-      exemples: "Google Ads, Meta, TikTok, Taboola, Affilae, Shop My Influence, Claydar"
+        "d'autres sites et sur les réseaux sociaux."
     }
   };
 
@@ -342,7 +339,6 @@
           "</button>" +
         "</div>" +
         "<p>" + t.texte + "</p>" +
-        "<p><b>Exemples :</b> " + t.exemples + "</p>" +
       "</div>"
     );
   }

@@ -15,6 +15,10 @@
 //   data-libelle-principale   texte du second bouton quand la vidéo secondaire joue
 //   data-variante-secondaire  valeur de video.dataset.variant pendant la vidéo secondaire
 // Le reste est repris à l'identique.
+//
+// Fermée, la vidéo ne revient plus de la session (humain, 2026-10-28) : ni sur cette page, ni sur
+// l'autre page qui la porte, dans aucun onglet. Le choix est gardé dans un cookie de session (sans
+// durée : effacé à la fermeture du navigateur), choix d'affichage de la visiteuse, sans consentement.
 
 (function () {
   if (window.__elseeVideoPresentation) return;
@@ -51,6 +55,12 @@
     const howItWorksBtn = document.getElementById("psHowItWorks");
 
     if (!widget || !video || !closeBtn || !controlBtn || !icon || !progress || !progressBar || !actionButtons || !howItWorksBtn) return;
+
+    const COOKIE_FERMEE = "elsee_video_fermee";
+    if (document.cookie.split("; ").indexOf(COOKIE_FERMEE + "=1") !== -1) {
+      widget.remove();
+      return;
+    }
 
     let secondaryVideoActive = false;
 
@@ -244,7 +254,12 @@
 
     closeBtn.addEventListener("click", function () {
       video.pause();
-      widget.remove();
+      document.cookie = COOKIE_FERMEE + "=1; path=/; SameSite=Lax";
+      // Retirer is-visible d'abord : le fondu joue, et consentement.js voit la place se libérer.
+      widget.classList.remove("is-visible");
+      setTimeout(function () {
+        widget.remove();
+      }, 250);
     });
   });
 })();

@@ -1,28 +1,2 @@
-<!-- Google Tag Manager (noscript) -->
-<noscript>
-  <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5CNWQFC7"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe>
-</noscript>
-
-<!-- Chargement différé des scripts tiers (RGPD + autres à ajouter ici si besoin) -->
-<script>
-  setTimeout(() => {
-    const enzuzo = document.createElement('script');
-    enzuzo.src = "https://app.enzuzo.com/scripts/cookiebar/b601df8c-7ce1-11ef-bb6a-ab987d8d4c60";
-    enzuzo.async = true;
-    document.body.appendChild(enzuzo);
-  }, 1500); // assez tôt pour l'affichage, sans bloquer
-</script>
-
 <!-- Script global du site : utils.js (FAQ, URL de page, virgules, .funnelentry, provenance des visites, dates .cms-date) -->
 <script src="{{jsdelivr:utils.js}}" integrity="{{sri:utils.js}}" crossorigin="anonymous" defer></script>
-
-<!-- Claydar -->
-<script>
-  setTimeout(function() {
-    var s = document.createElement('script');
-    s.src = "https://static.claydar.com/init.v1.js?id=c99pK2ugyb";
-    s.async = true;
-    document.body.appendChild(s);
-  }, 2000);
-</script>

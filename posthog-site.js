@@ -2,7 +2,7 @@
 // posthog-site.js — mesure du site public par PostHog (dev_ops D91)
 // ============================================================================
 // Réglages du site, Custom code, en-tête : toutes les pages. Remplace Hotjar (balise GTM, retirée
-// le jour de la mise en ligne).
+// le jour de la mise en ligne). Pages vues, clics, cartes de chaleur, erreurs JavaScript, replays.
 //
 // D91 : « Le site charge PostHog dans le projet de production de l'app, même clé publique, même
 // api_host. Pas de second projet : c'est ce qui fait suivre la personne d'un domaine à l'autre. »
@@ -24,6 +24,9 @@
   window.__elseePosthog = true;
 
   if (!/^(www\.)?elsee\.care$/.test(location.hostname)) return;
+  // D91 : « Jamais sur /reset-password » : son adresse porte le code de réinitialisation (oobCode),
+  // qui suffit à changer le mot de passe tant qu'il n'a pas expiré.
+  if (/^\/reset-password\/?$/.test(location.pathname)) return;
 
   // Clé publique du projet de production : la même que webapp:web/index.html (loadPostHog).
   var KEY = "phc_l6wWd9DBtpBAMDViRD8trbHYuFbiYfSbfjZcRZyREiq";
@@ -69,6 +72,11 @@
       capture_pageview: true,
       capture_pageleave: true,
       capture_exceptions: true,
+      enable_heatmaps: true,
+      // Le projet enregistre le corps des requêtes dans les replays (réglage de l'app) : sur le
+      // site, ce serait l'envoi des formulaires. D91 : « Le réseau et la console ne sont pas
+      // enregistrés dans les replays. »
+      capture_performance: false,
       session_recording: {
         maskAllInputs: false,
         maskInputOptions: { password: true }

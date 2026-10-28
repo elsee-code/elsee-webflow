@@ -61,6 +61,7 @@ sera écrasé au prochain collage.
 
 | Fichier | Ce qu'il fait | Où il est chargé (`webflow/…`) |
 |---|---|---|
+| `posthog-site.js` | mesure PostHog du site (pages vues, clics, erreurs JavaScript, replays), dans le projet de l'app pour suivre une personne jusqu'à `app.elsee.care` ; chargée après l'accord Enzuzo, en prod seulement ; jamais d'`identify` (dev_ops D91) | `site/head.html`, toutes les pages |
 | `utils.js` | script global : provenance des visites (`first_source`, `session_source`, `last_touch_url`, lus par le formulaire principal), boutons `.funnelentry`, dates `.cms-date`, accordéon FAQ, URL de page, virgules des listes CMS | `site/footer.html`, toutes les pages |
 | `algolia-search.js`, `maps-autocomplete.js` | moteur de l'annuaire (recherche, facettes, options, géolocalisation, cartes) et champ « lieu » (Google Places) ; même commit pour les deux | `pages/lannuaire-des-partenaires-elsee/footer.html` (`@1a7b95e`, lu en ligne le 2026-10-23) |
 | `network-search.js` | recherche simplifiée de `/reseau-elsee`, qui renvoie vers l'annuaire | `pages/reseau-elsee/footer.html` |

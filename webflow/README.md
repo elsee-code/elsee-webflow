@@ -37,9 +37,17 @@ scripts supposent qu'ils s'exécutent avant `DOMContentLoaded`. `scripts/ci/chec
 refuse un marqueur sans fichier, un `src` sans `integrity`, une balise du dépôt sans `defer`, un
 fichier en ligne qui contient `</script` ou `<!--`, et un script qui ne se parse pas.
 
-Restent collés en ligne, à dessein : les balises des fournisseurs (GTM, Enzuzo, Claydar, pixels Meta,
-Shop My Influence, conversion Google Ads), les feuilles de style, et le petit script `noindex` de
-l'annuaire, qui doit s'exécuter dans `<head>`.
+Restent collés en ligne, à dessein : les pixels Meta, Shop My Influence et la conversion Google Ads
+des pages `/bienvenue-chez-elsee` et `/inscription`, les feuilles de style, et le petit script
+`noindex` de l'annuaire, qui doit s'exécuter dans `<head>`.
+
+**Un traceur attend toujours le consentement** (dev_ops D92). GTM et Claydar sont chargés par
+`consentement.js`, la bannière maison, selon les finalités acceptées. Un pixel publicitaire collé dans
+une page s'écrit `<script type="text/plain" data-elsee-consentement="pixels">` : `consentement.js`
+l'exécute après l'accord à « Publicité et réseaux sociaux », jamais avant. Pas de `<noscript>` de
+traceur : il ne peut pas attendre un accord. Le lien « Gérer mes cookies » du pied de page est posé
+par `consentement.js`, avant « Politique de confidentialité » ; tout autre lien vers
+`#gerer-mes-cookies` ouvre aussi les préférences.
 
 La clé Google Maps n'est pas dans le dépôt : `CLE_GOOGLE_MAPS` désigne celle qui est déjà dans Webflow.
 
@@ -65,6 +73,6 @@ La clé Google Maps n'est pas dans le dépôt : `CLE_GOOGLE_MAPS` désigne celle
   de Webflow.
 - Les landings `/lp/*` : leur HTML, leur CSS et leurs scripts sont produits par le Studio
   (`internal_tool`, décisions D31 et D34) et écrits dans le CMS.
-- Les balises de Google Tag Manager (`GTM-5CNWQFC7`) : GA4, Hotjar, Google Ads, Meta, TikTok,
+- Les balises de Google Tag Manager (`GTM-5CNWQFC7`) : GA4, Google Ads, Meta, TikTok, Taboola,
   Affilae, Brevo, Trustpilot, et le suivi des étapes de `/obtenir-mon-offre` (`#formSlider`,
   `.slide.active`, id `slide-<n>` : ne pas les renommer).

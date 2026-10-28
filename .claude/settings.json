@@ -21,8 +21,6 @@
       "Bash(node scripts/gcp-read.mjs:*)",
       "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)",
       "Bash(node /home/user/dev_ops/scripts/gcp-staging.mjs:*)",
-      "Bash(node tools/gcp-debug.js:*)",
-      "Bash(node functions/tools/gcp-debug.js:*)",
       "Bash(node /home/user/elsee_functions_V2/functions/tools/gcp-debug.js:*)"
     ]
   },

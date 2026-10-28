@@ -46,7 +46,7 @@
       var target = ph;
       if (name !== undefined) target = ph[name] = [];
       else name = "posthog";
-      "capture opt_in_capturing opt_out_capturing".split(" ")
+      "capture opt_in_capturing opt_out_capturing clear_opt_in_out_capturing".split(" ")
         .forEach(function (method) {
           target[method] = function () {
             target.push([method].concat(Array.prototype.slice.call(arguments)));

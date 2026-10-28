@@ -542,6 +542,9 @@
 
   var choix = lireChoix();
   if (choix) appliquer(choix, null);
+  // Sans choix valable (premier passage, ou six mois écoulés), PostHog oublie l'accord qu'il gardait
+  // lui-même : il attend la réponse à la bannière, sans rien envoyer.
+  else if (window.posthog) window.posthog.clear_opt_in_out_capturing();
 
   function demarrerInterface() {
     if (choix) afficherDock();

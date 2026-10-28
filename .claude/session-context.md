@@ -24,6 +24,31 @@ rien : un skill tiers entre dans la stack par une PR `dev_ops` (copie relue, add
 `unlazy` avec D63. La session peut préparer cette PR elle-même, puis attend le GO comme pour toute
 livraison.
 
+## Lire la prod — permanent (D95)
+
+La session **a un accès en lecture** à la prod `appelsee-2k24` : Firestore, Cloud Logging, liste des
+Functions, par le compte `claude-debug`, dont la clé est dans la variable `CONFIG` de l'environnement.
+`gcloud` n'est pas installé : c'est normal, l'accès ne passe pas par lui. La ligne
+`[session-start] accès prod en lecture` en tête de ce contexte dit si la clé et les outils sont là.
+
+| Depuis | Commande | Ce qu'elle lit |
+|---|---|---|
+| tout dépôt, `dev_ops` rattaché | `node /home/user/dev_ops/scripts/gcp-read.mjs whoami` · `logs '<filtre>' --depuis 24h` · `doc <collection>/<id>` · `requete <collection> <champ> <valeur>` | logs et documents, champs sensibles masqués, plafonné (D32) ; aucune dépendance à installer |
+| `elsee_functions_V2` | `cd functions && npm ci` une fois (6 s, sinon `Cannot find module`), puis `node tools/gcp-debug.js logs --fn=<nom> --since=6h --grep=<texte>` · `doc` · `query` · `sync-diag` | logs, documents, diagnostic de la synchro Odoo ; **rien n'est masqué** |
+
+- **Ne jamais répondre « je n'ai pas accès aux logs » ou « à la prod » sans avoir lancé
+  `gcp-read.mjs whoami`** (ou une commande de `gcp-debug.js`). Un échec se cite tel quel : le message
+  du bac à sable ou de l'API, pas un résumé. `Cannot find module` veut dire `npm ci`, pas « pas d'accès ».
+  Un refus du bac à sable sur `gcp-debug.js` : le citer, puis passer par `gcp-read.mjs`, autorisé.
+- Ligne « ABSENTE » en tête : l'environnement de cette session ne porte pas la clé. Le dire en une
+  ligne à l'humain ; ne chercher aucun contournement.
+- La clé ne se lit, ne se décode, ne s'affiche ni ne se copie à la main : seuls ces deux scripts y
+  touchent.
+- Ce qui est lu ne sort pas de la session (D32 § 5) : ni commit, ni issue, ni mémoire, ni journal
+  d'observations. Une conclusion cite un identifiant, pas une donnée. Pour le document d'une membre,
+  préférer `gcp-read.mjs`, qui masque.
+- Ces outils ne lisent que la prod et n'écrivent nulle part. Écrire sur staging : `gcp-staging.mjs` (D74).
+
 ## stop-slop — permanent
 
 Toute prose que tu écris — messages, documentation, descriptions de PR, commentaires, commits — suit

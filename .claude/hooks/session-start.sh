@@ -38,6 +38,24 @@ else
 fi
 warn="$warn $sg"
 
+# Accès prod en lecture (D95). Des sessions répondaient « pas d'accès aux logs » sans avoir essayé :
+# on constate la présence de la clé (jamais sa valeur) et des deux outils, et on le dit d'emblée.
+base="$(dirname "$root")"
+read_tool="$base/dev_ops/scripts/gcp-read.mjs"
+debug_dir="$base/elsee_functions_V2/functions"
+if [[ "${CONFIG:-}" == *GCP_SA_KEY_B64=* || -n "${GCP_SA_KEY_B64:+1}" ]]; then
+  tools=""
+  [ -f "$read_tool" ] && tools="node $read_tool whoami | logs '<filtre>' --depuis 24h | doc <chemin>"
+  if [ -f "$debug_dir/tools/gcp-debug.js" ]; then
+    deps="prêt"; [ -d "$debug_dir/node_modules/firebase-admin" ] || deps="lancer d'abord : cd $debug_dir && npm ci"
+    tools="${tools:+$tools ; }node $debug_dir/tools/gcp-debug.js logs --fn=<nom> --since=6h ($deps)"
+  fi
+  prod="[session-start] accès prod en lecture : DISPONIBLE (clé claude-debug présente). ${tools:-Aucun outil sur disque : rattacher dev_ops (scripts/gcp-read.mjs) ou elsee_functions_V2 (functions/tools/gcp-debug.js)}. Ne jamais répondre « pas d'accès » sans avoir lancé l'un d'eux."
+else
+  prod="[session-start] accès prod en lecture : ABSENTE (la variable CONFIG de cet environnement ne porte pas la clé claude-debug). Le dire à l'humain tel quel, sans contournement."
+fi
+warn="$warn $prod"
+
 if [ ! -f "$f" ]; then echo "$warn"; exit 0; fi
 if command -v python3 >/dev/null 2>&1; then
   python3 - "$f" "$warn" <<'PY'

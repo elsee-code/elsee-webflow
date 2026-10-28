@@ -19,7 +19,8 @@
     "allow": [
       "Agent",
       "Bash(node scripts/gcp-read.mjs:*)",
-      "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)"
+      "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)",
+      "Bash(node /home/user/dev_ops/scripts/gcp-staging.mjs:*)"
     ]
   },
   "hooks": {

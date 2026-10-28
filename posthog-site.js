@@ -25,8 +25,11 @@
 
   if (!/^(www\.)?elsee\.care$/.test(location.hostname)) return;
   // D91 : « Jamais sur /reset-password » : son adresse porte le code de réinitialisation (oobCode),
-  // qui suffit à changer le mot de passe tant qu'il n'a pas expiré.
+  // qui suffit à changer le mot de passe tant qu'il n'a pas expiré. Ni sur une page ouverte depuis
+  // elle : le code arriverait par le referrer, que posthog-js garde aussi dans son cookie
+  // ($initial_referrer), relu et renvoyé par l'app.
   if (/^\/reset-password\/?$/.test(location.pathname)) return;
+  if (document.referrer.indexOf("oobCode") !== -1) return;
 
   // Clé publique du projet de production : la même que webapp:web/index.html (loadPostHog).
   var KEY = "phc_l6wWd9DBtpBAMDViRD8trbHYuFbiYfSbfjZcRZyREiq";
@@ -64,6 +67,8 @@
     return ph;
   }
 
+  // Une page ouverte depuis /reset-password reçoit son adresse, oobCode compris, en referrer :
+  // on retire la requête de toute adresse qui le porte, avant l'envoi.
   function start() {
     started = true;
     stub().init(KEY, {

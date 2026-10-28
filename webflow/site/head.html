@@ -28,6 +28,9 @@
   }
 </style>
 
+<!-- Mesure PostHog (posthog-site.js, dev_ops D91) : même projet que l'app, chargée après l'accord Enzuzo, en prod seulement -->
+<script src="{{jsdelivr:posthog-site.js}}" integrity="{{sri:posthog-site.js}}" crossorigin="anonymous" defer></script>
+
 <!-- Deferred Scripts -->
 <script>
   // ⚡ Charge les scripts marketing après 2 secondes (sans bloquer le thread principal)

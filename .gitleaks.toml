@@ -30,3 +30,8 @@ regexes = ['''^\s*var apiKey = "prNJTD1_6WdnGDPbSVMmn9bDDcfAKZeCUjTOmX4";$''']
 description = "Jetons d'URL Firebase Storage des vidéos de présentation (dossier interne/ du bucket de prod), dans les réglages de video-presentation.js (webflow/embeds/) : liens de téléchargement de vidéos publiques, servis tels quels sur l'accueil et /avantages, comme dans webapp (relevé du 2026-10-23)"
 regexTarget = "line"
 regexes = ['''^\s*data-[a-z]+="https://firebasestorage\.googleapis\.com/v0/b/appelsee-2k24\.appspot\.com/o/interne%2F[^"]*&amp;token=[0-9a-f-]{36}"$''']
+
+[[allowlists]]
+description = "Clé de projet PostHog (phc_…) de posthog-site.js : clé d'écriture publique par construction, la même que webapp:web/index.html (loadPostHog), servie à tout navigateur ; elle ne permet que d'envoyer des événements, pas de lire le projet (dev_ops D91, 2026-10-28)"
+regexTarget = "line"
+regexes = ['''^\s*var KEY = "phc_l6wWd9DBtpBAMDViRD8trbHYuFbiYfSbfjZcRZyREiq";$''']

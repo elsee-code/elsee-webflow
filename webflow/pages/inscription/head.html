@@ -1,4 +1,16 @@
-<!-- Event snippet for inscription NL conversion page --> <script type="text/plain" data-elsee-consentement="pixels"> gtag('event', 'conversion', { 'send_to': 'AW-1035654609/VukDCJHK9AQQ0avr7QM', 'value': 1.0, 'currency': 'EUR' }); </script>
+<!-- Conversion Google Ads « inscription NL ». La page n'a pas d'autre gtag.js (GTM ne définit pas
+     window.gtag) : il est chargé ici, après l'accord à la publicité, comme le reste du bloc. -->
+<script type="text/plain" data-elsee-consentement="pixels">
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+var gtagAds = document.createElement('script');
+gtagAds.async = true;
+gtagAds.src = 'https://www.googletagmanager.com/gtag/js?id=AW-1035654609';
+document.head.appendChild(gtagAds);
+gtag('js', new Date());
+gtag('config', 'AW-1035654609');
+gtag('event', 'conversion', { 'send_to': 'AW-1035654609/VukDCJHK9AQQ0avr7QM', 'value': 1.0, 'currency': 'EUR' });
+</script>
 <!-- Meta Pixel Code -->
 <script type="text/plain" data-elsee-consentement="pixels">
 !function(f,b,e,v,n,t,s)

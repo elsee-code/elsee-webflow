@@ -109,7 +109,8 @@ attendu — la session allège quatre choses et n'en allège aucune autre.
    - *Symptôme* : où, comment, reproduit ou non.
    - *Cause* : le fichier et la ligne, ou « inconnue ».
    - *Preuve* : la ligne de log, l'identifiant du document, la capture, le test qui échoue. Sur le
-     backend, `node tools/gcp-debug.js` lit la prod (après `npm ci` dans `functions/`) ; de
+     backend, `node /home/user/elsee_functions_V2/functions/tools/gcp-debug.js` lit la prod (après
+     `npm ci` dans `functions/`) ; de
      partout, `node /home/user/dev_ops/scripts/gcp-read.mjs logs` et `doc` (D95) ; sur l'app, la
      console du navigateur et `version.json`.
    **Sans preuve, on cherche, on ne corrige pas à l'aveugle** : la session le dit en une ligne et

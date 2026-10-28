@@ -34,12 +34,13 @@ Functions, par le compte `claude-debug`, dont la clé est dans la variable `CONF
 | Depuis | Commande | Ce qu'elle lit |
 |---|---|---|
 | tout dépôt, `dev_ops` rattaché | `node /home/user/dev_ops/scripts/gcp-read.mjs whoami` · `logs '<filtre>' --depuis 24h` · `doc <collection>/<id>` · `requete <collection> <champ> <valeur>` | logs et documents, champs sensibles masqués, plafonné (D32) ; aucune dépendance à installer |
-| `elsee_functions_V2` | `cd functions && npm ci` une fois (6 s, sinon `Cannot find module`), puis `node tools/gcp-debug.js logs --fn=<nom> --since=6h --grep=<texte>` · `doc` · `query` · `sync-diag` | logs, documents, diagnostic de la synchro Odoo ; **rien n'est masqué** |
+| `elsee_functions_V2` | `cd /home/user/elsee_functions_V2/functions && npm ci` une fois (6 s, sinon `Cannot find module`), puis `node /home/user/elsee_functions_V2/functions/tools/gcp-debug.js logs --fn=<nom> --since=6h --grep=<texte>` · `doc` · `query` · `sync-diag` | logs, documents, diagnostic de la synchro Odoo ; **rien n'est masqué** |
 
 - **Ne jamais répondre « je n'ai pas accès aux logs » ou « à la prod » sans avoir lancé
   `gcp-read.mjs whoami`** (ou une commande de `gcp-debug.js`). Un échec se cite tel quel : le message
   du bac à sable ou de l'API, pas un résumé. `Cannot find module` veut dire `npm ci`, pas « pas d'accès ».
-  Un refus du bac à sable sur `gcp-debug.js` : le citer, puis passer par `gcp-read.mjs`, autorisé.
+  Seul le chemin absolu de `gcp-debug.js` est autorisé sans demande (une forme relative s'appliquerait
+  à un fichier du même nom dans n'importe quel dépôt) ; un refus : le citer, puis passer par `gcp-read.mjs`.
 - Ligne « ABSENTE » en tête : l'environnement de cette session ne porte pas la clé. Le dire en une
   ligne à l'humain ; ne chercher aucun contournement.
 - La clé ne se lit, ne se décode, ne s'affiche ni ne se copie à la main : seuls ces deux scripts y

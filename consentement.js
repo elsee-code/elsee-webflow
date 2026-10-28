@@ -15,10 +15,20 @@
 // D92 : « PostHog démarre en `cookieless_mode: "on_reject"` » (posthog-site.js) : l'accord à la
 // mesure d'audience le passe en mesure complète, le refus le laisse compter la visite sans cookie.
 // D92 : « Le choix est gardé six mois dans le cookie `elsee_consentement`, sur `.elsee.care`. »
+//
+// Mode app (dev_ops D93), balise avec `data-contexte="app"` : même bannière, même cookie, même
+// Consent Mode, mais aucun traceur chargé ni piloté ici. L'app lit le choix
+// (`window.elseeConsentement.choix()`) et l'écoute (événement `elsee:consentement` sur document,
+// `detail` = le choix) pour charger elle-même les siens. `data-decalage-bas` (px) remonte le
+// cadenas au-dessus d'une barre de navigation.
 
 (function () {
   if (window.__elseeConsentement) return;
   window.__elseeConsentement = true;
+
+  var reglages = (document.currentScript && document.currentScript.dataset) || {};
+  var APP = reglages.contexte === "app";
+  var DECALAGE_BAS = parseInt(reglages.decalageBas, 10) || 0;
 
   var GTM_ID = "GTM-5CNWQFC7";
   // Passe à true quand chaque balise du conteneur porte sa condition de consentement : GTM se
@@ -157,6 +167,13 @@
         if (avant[f] && !choix[f]) effacerCookies(f);
       });
     }
+
+    var detail = {};
+    FINALITES.forEach(function (f) {
+      detail[f] = choix[f];
+    });
+    document.dispatchEvent(new CustomEvent("elsee:consentement", { detail: detail }));
+    if (APP) return;
 
     if (window.posthog) {
       if (choix.audience) window.posthog.opt_in_capturing();
@@ -440,6 +457,7 @@
           '<div class="ec-toast" role="status" aria-live="polite" hidden></div>' +
         "</div>"
       );
+      if (DECALAGE_BAS) dock.style.bottom = 16 + DECALAGE_BAS + "px";
       dock.addEventListener("click", surAction);
       racine.appendChild(dock);
       eviterVideo();
@@ -533,11 +551,13 @@
     ouvrirModale();
   });
 
+  window.elseeConsentement = { choix: lireChoix, ouvrir: ouvrirModale };
+
   var choix = lireChoix();
   if (choix) appliquer(choix, null);
   // Sans choix valable (premier passage, ou six mois écoulés), PostHog oublie l'accord qu'il gardait
   // lui-même : il attend la réponse à la bannière, sans rien envoyer.
-  else if (window.posthog) window.posthog.clear_opt_in_out_capturing();
+  else if (window.posthog && !APP) window.posthog.clear_opt_in_out_capturing();
 
   // Spec PRODUCT-1270 : « Il doit aussi exister un lien « Gérer mes cookies » dans le footer. »
   // Posé avant « Politique de confidentialité » dans chaque pied de page, au format de ses voisins
@@ -555,7 +575,7 @@
   }
 
   function demarrerInterface() {
-    ajouterLienPiedDePage();
+    if (!APP) ajouterLienPiedDePage();
     if (choix) afficherDock();
     else afficherBanniere();
     if (location.hash === ANCRE) ouvrirModale();

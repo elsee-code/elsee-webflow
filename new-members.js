@@ -125,9 +125,13 @@ window.addEventListener("DOMContentLoaded", function () {
     return "";
   }
 
+  // `type` est un texte, ou une liste pour une marque à plusieurs catégories (dev_ops D102).
   function isTherapeutes(hit) {
-    var t = (hit.type || "").trim().toLowerCase();
-    return t === "thérapeutes" || t === "therapeutes";
+    var types = Array.isArray(hit.type) ? hit.type : [hit.type];
+    return types.some(function (t) {
+      var n = String(t || "").trim().toLowerCase();
+      return n === "thérapeutes" || n === "therapeutes";
+    });
   }
 
   // Mise en page du bloc, et les règles de carte que l'annuaire pose dans sa propre page :

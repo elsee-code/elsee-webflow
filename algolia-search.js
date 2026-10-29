@@ -608,7 +608,7 @@ if (typesAltWrapper) {
     .map(function (fv) {
       var key = "type:::" + fv.name;
       var isSelected = selectedFacetTags.has(key);
-      var label = "Les " + fv.name.toLowerCase();
+      var label = fv.name;
       return (
         '<div class="directory_category_tag_wrapper ' +
         (isSelected ? "is-selected" : "") +

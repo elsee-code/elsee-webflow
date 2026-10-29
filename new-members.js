@@ -304,7 +304,7 @@ window.addEventListener("DOMContentLoaded", function () {
       .map(function (fv) {
         return (
           '<div class="directory_category_tag_wrapper ' + (fv.name === selectedType ? "is-selected" : "") +
-          '" data-facet-value="' + esc(fv.name) + '">' + esc("Les " + fv.name.toLowerCase()) + "</div>"
+          '" data-facet-value="' + esc(fv.name) + '">' + esc(fv.name) + "</div>"
         );
       })
       .join("");

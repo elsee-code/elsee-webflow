@@ -37,6 +37,18 @@ window.addEventListener("DOMContentLoaded", function () {
   var hasUserLaunchedSearch = false;
   var discountRawValues = []; // valeurs de remboursement renvoyées par Algolia
   var DIRECTORY_BASE_URL = "https://www.elsee.care/lannuaire-des-partenaires-elsee";
+
+  // Les marques sont rangées en quatre catégories, déduites de leurs prestations par le
+  // backend (dev_ops D102) : une marque peut en porter plusieurs, `type` est alors une liste.
+  // Chaque catégorie a son bloc secondaire, à la place de l'ancien bloc « Marques ».
+  var PRODUCT_CATEGORIES = [
+    { type: "Compléments alimentaires", slug: "complements_alimentaires", label: "compléments alimentaires" },
+    { type: "Cosmétiques", slug: "cosmetiques", label: "cosmétiques" },
+    { type: "Soins & protections", slug: "soins_protections", label: "soins & protections" },
+    { type: "Matériel & santé connectée", slug: "materiel_sante_connectee", label: "matériel & santé connectée" }
+  ];
+  // Ancienne valeur, encore présente dans des liens : elle vaut les quatre catégories.
+  var LEGACY_BRAND_TYPE = "Marques";
   var mainHitHrefSet = new Set();
   var mainHitPathSet = new Set();
   var mainHitOdooSet = new Set();
@@ -245,9 +257,18 @@ window.addEventListener("DOMContentLoaded", function () {
       return "";
     }
 
+    // `type` est un texte, ou une liste pour une marque à plusieurs catégories.
+    function hitTypes(hit) {
+      var t = hit && hit.type;
+      if (Array.isArray(t)) return t.map(function (x) { return String(x || ""); });
+      return t ? [String(t)] : [];
+    }
+
     function isTherapeutes(hit) {
-      var t = (hit.type || "").trim().toLowerCase();
-      return t === "thérapeutes" || t === "therapeutes";
+      return hitTypes(hit).some(function (t) {
+        var n = t.trim().toLowerCase();
+        return n === "thérapeutes" || n === "therapeutes";
+      });
     }
 
     function updateOnlyThpVisibility(helperState, hasJobsFacet) {
@@ -311,6 +332,7 @@ window.addEventListener("DOMContentLoaded", function () {
     if (n.includes("salons esthetiques") || n.includes("centres bien-etre")) return "wellness";
     if (n.includes("therapeutes")) return "therapeutes";
     if (n.includes("marques")) return "marques";
+    if (PRODUCT_CATEGORIES.some(function (c) { return norm(c.type) === n; })) return "marques";
     if (n.includes("applications") || n.includes("programmes")) return "programmes";
     if (n.includes("sports")) return "sports";
     return ""; // rien
@@ -1801,6 +1823,36 @@ function toggleWrapper(wrapperId, count) {
   wrap.style.display = count > 0 ? "flex" : "none";
 }
 
+function toggleProductWrappers(count) {
+  PRODUCT_CATEGORIES.forEach(function (cat) {
+    toggleWrapper("hits_" + cat.slug + "_wrapper", count);
+  });
+}
+
+// Remplace le bloc « Marques » posé dans Webflow (#hits_marques_wrapper) par un bloc par
+// catégorie de produits, clonés de lui pour garder sa mise en page : rien à créer dans
+// le Designer. Sans ce bloc sur la page, les catégories n'ont pas de bloc secondaire.
+function ensureProductBlocks() {
+  var original = document.getElementById("hits_marques_wrapper");
+  if (!original || !original.parentNode) return;
+  PRODUCT_CATEGORIES.forEach(function (cat) {
+    if (document.getElementById("hits_" + cat.slug + "_wrapper")) return;
+    var clone = original.cloneNode(true);
+    clone.id = "hits_" + cat.slug + "_wrapper";
+    clone.style.display = "none";
+    var title = clone.querySelector(".directory_search_results_count");
+    if (title) title.textContent = cat.type + " :";
+    var list = clone.querySelector("#hits_marques");
+    if (list) {
+      list.id = "hits_" + cat.slug;
+      list.innerHTML = "";
+    }
+    original.parentNode.insertBefore(clone, original);
+  });
+  original.parentNode.removeChild(original);
+}
+ensureProductBlocks();
+
 function toggleLowResults(results) {
   if (!results) return;
   var lowResults = document.getElementById("low-results");
@@ -1817,7 +1869,7 @@ async function fetchAndRenderMoreBlocks() {
   if (!hasGeo) {
     more.style.display = "none";
     toggleWrapper("hits_therapeutes_wrapper", 0);
-    toggleWrapper("hits_marques_wrapper", 0);
+    toggleProductWrappers(0);
     toggleWrapper("hits_applications_programmes_wrapper", 0);
     return;
   }
@@ -1851,26 +1903,27 @@ async function fetchAndRenderMoreBlocks() {
   });
   toggleWrapper("hits_therapeutes_wrapper", thHits.length);
 
-  // === Marques + Applications seulement si pas de job ===
+  // === Catégories de produits + Applications seulement si pas de job ===
   if (!hasJobFilter) {
-    // --- Marques ---
-    var mqFacetFilters = buildFacetFiltersFor("Marques");
-    var mqFilters = makeFiltersString("", true); // ignore géoloc
-
-    var mqRes = await rawIndex
-      .search(queryStr, {
-        hitsPerPage: 24,
-        facetFilters: mqFacetFilters,
-        filters: mqFilters
-      })
-      .catch(() => ({ hits: [] }));
-
-    var mqHits = (mqRes && mqRes.hits) || [];
-    renderInto("hits_marques", mqHits, {
-      typeFacetValue: "Marques",
-      label: "marques"
-    });
-    toggleWrapper("hits_marques_wrapper", mqHits.length);
+    // --- Une requête par catégorie de produits, en parallèle ---
+    var pdFilters = makeFiltersString("", true); // ignore géoloc
+    await Promise.all(PRODUCT_CATEGORIES.map(function (cat) {
+      return rawIndex
+        .search(queryStr, {
+          hitsPerPage: 24,
+          facetFilters: buildFacetFiltersFor(cat.type),
+          filters: pdFilters
+        })
+        .catch(() => ({ hits: [] }))
+        .then(function (res) {
+          var hits = (res && res.hits) || [];
+          renderInto("hits_" + cat.slug, hits, {
+            typeFacetValue: cat.type,
+            label: cat.label
+          });
+          toggleWrapper("hits_" + cat.slug + "_wrapper", hits.length);
+        });
+    }));
 
     // --- Applications et programmes ---
     var apFacetFilters = buildFacetFiltersFor("Applications et programmes");
@@ -1891,8 +1944,8 @@ async function fetchAndRenderMoreBlocks() {
     });
     toggleWrapper("hits_applications_programmes_wrapper", apHits.length);
   } else {
-    // job sélectionné → on masque Marques + Applications
-    toggleWrapper("hits_marques_wrapper", 0);
+    // job sélectionné → on masque les catégories de produits + Applications
+    toggleProductWrappers(0);
     toggleWrapper("hits_applications_programmes_wrapper", 0);
   }
 }
@@ -2815,6 +2868,12 @@ async function fetchAndRenderMoreBlocks() {
       var params = new URLSearchParams(window.location.search);
       var query = params.get("q") || "";
       var types = (params.get("type") || "").split(",").filter(Boolean);
+      if (types.indexOf(LEGACY_BRAND_TYPE) !== -1) {
+        types = types
+          .filter(function (t) { return t !== LEGACY_BRAND_TYPE; })
+          .concat(PRODUCT_CATEGORIES.map(function (c) { return c.type; }))
+          .filter(function (t, i, all) { return all.indexOf(t) === i; });
+      }
       var spes = (params.get("specialities") || "").split(",").filter(Boolean);
       var geo = params.get("geo") || "";
       var prestas = (params.get("prestations") || "").split(",").filter(Boolean);

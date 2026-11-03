@@ -24,6 +24,25 @@ rien : un skill tiers entre dans la stack par une PR `dev_ops` (copie relue, add
 `unlazy` avec D63. La session peut préparer cette PR elle-même, puis attend le GO comme pour toute
 livraison.
 
+## Demande design : 🫟 en tête du titre — permanent
+
+Une session qui traite une demande design ajoute 🫟 en tête de son titre dans la barre latérale de
+Claude, pour que l'humain la repère d'un coup d'œil (demandé le 2026-11-03).
+
+- **Demande design** : le livrable attendu est un design, pas du code. Maquette, écran ou parcours à
+  dessiner, prototype visuel (Claude Design, Figma, Canva), charte, visuel, retour sur un design.
+  Intégrer en code une maquette déjà fournie reste du dev : pas de 🫟. En cas de doute, pas de 🫟.
+- **Quand** : au premier tour, dès que la demande est reconnue comme design. Une session partie en dev
+  qui bascule en design le pose à ce moment-là.
+- **Comment** : `get_session` sans `session_id` (serveur `claude-code-remote`) donne l'identifiant et
+  le titre courant ; `set_session_title` pose `🫟 <titre courant>`, le reste du titre inchangé. Un
+  titre qui commence déjà par 🫟 ne se touche pas. Si les deux outils sont différés, les charger par
+  `ToolSearch` (`select:mcp__claude-code-remote__get_session,mcp__claude-code-remote__set_session_title`).
+- **Sans ces outils** (session locale) : rien à faire, et on ne le signale pas.
+
+Vérifié le 2026-11-03 : `set_session_title` renomme la session en cours, et `get_session` renvoie le
+nouveau titre.
+
 ## Lire la prod — permanent (D95)
 
 La session **a un accès en lecture** à la prod `appelsee-2k24` : Firestore, Cloud Logging, liste des

@@ -50,6 +50,10 @@ par `consentement.js`, avant « Politique de confidentialité » ; tout autre li
 `#gerer-mes-cookies` ouvre aussi les préférences.
 
 La clé Google Maps n'est pas dans le dépôt : `CLE_GOOGLE_MAPS` désigne celle qui est déjà dans Webflow.
+Au collage, on garde la clé déjà présente dans l'emplacement, ou on la copie entière depuis un autre
+emplacement qui marche (modèle praticien). Jamais depuis un affichage qui la masque (`AIzaSyBz•••`) :
+une clé masquée donne `InvalidKeyMapError` et le champ « Où ? » de l'annuaire n'affiche plus aucune
+suggestion, sans autre signe que cette erreur dans la console (2026-11-03).
 
 ## Coller une version
 

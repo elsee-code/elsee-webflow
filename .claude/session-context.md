@@ -24,16 +24,18 @@ rien : un skill tiers entre dans la stack par une PR `dev_ops` (copie relue, add
 `unlazy` avec D63. La session peut préparer cette PR elle-même, puis attend le GO comme pour toute
 livraison.
 
-## Demande design : 🫟 en tête du titre — permanent
+## `/design` : 🫟 en tête du titre — permanent
 
-Une session qui traite une demande design ajoute 🫟 en tête de son titre dans la barre latérale de
-Claude, pour que l'humain la repère d'un coup d'œil (demandé le 2026-11-03).
+Un message de l'humain qui commence par `/design` fait poser 🫟 en tête du titre de la session dans la
+barre latérale de Claude, pour qu'il la repère d'un coup d'œil (demandé le 2026-11-03 ; déclencheur
+fixé à `/design` seul le 2026-11-04).
 
-- **Demande design** : le livrable attendu est un design, pas du code. Maquette, écran ou parcours à
-  dessiner, prototype visuel (Claude Design, Figma, Canva), charte, visuel, retour sur un design.
-  Intégrer en code une maquette déjà fournie reste du dev : pas de 🫟. En cas de doute, pas de 🫟.
-- **Quand** : au premier tour, dès que la demande est reconnue comme design. Une session partie en dev
-  qui bascule en design le pose à ce moment-là.
+- **Déclencheur** : `/design` en tête du message, rien d'autre. La session ne juge pas si la demande
+  est du design : avec `/design`, 🫟, même pour coder une page ; sans `/design`, pas de 🫟, même pour
+  une maquette. Le hook `UserPromptSubmit` (`.claude/hooks/design-title.sh`) le rappelle dans le
+  contexte du tour concerné.
+- **Quand** : au tour où le message arrive, avant tout autre outil. Un `/design` envoyé plus tard dans
+  la session le pose à ce tour-là.
 - **Comment** : `get_session` sans `session_id` (serveur `claude-code-remote`) donne l'identifiant et
   le titre courant ; `set_session_title` pose `🫟 <titre courant>`, le reste du titre inchangé. Un
   titre qui commence déjà par 🫟 ne se touche pas. Si les deux outils sont différés, les charger par
@@ -41,7 +43,9 @@ Claude, pour que l'humain la repère d'un coup d'œil (demandé le 2026-11-03).
 - **Sans ces outils** (session locale) : rien à faire, et on ne le signale pas.
 
 Vérifié le 2026-11-03 : `set_session_title` renomme la session en cours, et `get_session` renvoie le
-nouveau titre.
+nouveau titre. Le 2026-11-04, la session « Checkout page Fitness Park », ouverte par `/design`, n'a pas
+posé 🫟 : l'ancienne définition (« intégrer une maquette reste du dev », « en cas de doute, pas de 🫟 »)
+lui laissait le choix. D'où le déclencheur unique et le hook.
 
 ## Lire la prod — permanent (D95)
 

@@ -1,5 +1,16 @@
 # Règles de travail sur ce repo (lues au démarrage de chaque session)
 
+## `/design` : 🫟 en tête du titre de la session — à appliquer dès le premier tour
+
+Un message de l'humain qui commence par `/design` : **avant tout autre outil**, `get_session` sans
+`session_id`, puis `set_session_title` avec `🫟 <titre courant>` (serveur `claude-code-remote` ; outils
+différés : `ToolSearch` `select:mcp__claude-code-remote__get_session,mcp__claude-code-remote__set_session_title`).
+Un titre qui commence déjà par 🫟 ne se touche pas ; sans ces outils, rien. Sans `/design`, pas de 🫟.
+
+La règle est écrite ici, et pas seulement dans `.claude/session-context.md`, parce qu'une session à
+plusieurs dépôts démarre dans `/home/user` : les hooks de `.claude/` n'y sont pas chargés, seuls les
+`CLAUDE.md` le sont (constat du 2026-11-05).
+
 ## Ce dépôt fait partie de la plateforme Elsee, orchestrée par `elsee-code/dev_ops`
 
 Avant d'écrire quoi que ce soit, poser la question d'ouverture :

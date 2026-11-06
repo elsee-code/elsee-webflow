@@ -164,6 +164,21 @@ Ce que la session fait, dans tous les modes :
   la voir tôt (aucune vérification en brouillon), et la passe en « prête » **une fois**, travail fini.
   Un NO GO se corrige en **un seul** envoi, pas une série.
 
+### 3 bis. Rien qui attende une autorisation que personne ne voit (D109)
+
+En mode auto, une commande Bash que le classifieur ne sait pas découper (heredoc, script Python en
+ligne, chaîne de `&&`) devient une demande d'autorisation. Dans une session enfant, personne ne regarde
+l'écran : la session attend des heures (observations 0031 et 0032). Deux règles, sans exception :
+
+1. **Un fichier se modifie avec Edit ou Write, jamais par un script shell.** Ni `python3 - <<'EOF'`, ni
+   `cat > fichier <<EOF`, ni `sed -i` ou `perl -pi` sur plusieurs lignes. Un message de commit, un corps
+   de PR, un rapport s'écrivent aussi avec Write, dans un fichier du scratchpad de la session.
+2. **Une commande Bash à la fois**, sans `&&`, `;`, `|` ni heredoc dès qu'elle écrit quelque chose. Pour
+   livrer : `git add <fichiers>`, puis `git commit -F <scratchpad>/commit-msg.txt` (fichier écrit avec
+   Write juste avant), puis `git push -u origin <branche>` — trois appels. Ces commandes, les contrôles
+   du dépôt et la lecture git sont autorisés d'avance (`.claude/settings.json`) ; le push vers `main`,
+   `prod`, `flutterflow` ou `release/*` est refusé, et tout le reste peut demander une autorisation.
+
 ## 4. Livraison : un format fixe, et rien d'autre
 
 Le message « Livré » contient exactement ces cinq blocs :
@@ -251,7 +266,15 @@ le tag, l'URL, le lien de la carte, et en « direct en prod » le tableau « À 
 session est finie.
 
 Les trois seuls états qui terminent une session : **Livré** (attente du GO), **Fermé** (GO exécuté),
-**Arrêté** (bloqué : ce qui bloque et ce qu'il faut pour reprendre). Un **NO GO** reste dans la même
+**Arrêté** (bloqué : ce qui bloque et ce qu'il faut pour reprendre).
+
+**Aucun tour ne finit sur une étape intermédiaire** (D109). Une revue de sécurité terminée, des tests
+verts, une PR ouverte ne sont pas des fins : la session enchaîne l'étape suivante dans le même tour. Un
+tour ne se termine que de deux façons : l'étape suivante est lancée et la session sera réveillée
+(abonnement à la PR par `subscribe_pr_activity`, rappel `send_later` pendant qu'un workflow tourne), ou
+un message **Livré**, **Fermé** ou **Arrêté** est parti. Une session enfant (`get_session` sans
+`session_id` donne un `parent_session_id`) envoie ce message **à son pilote** par `send_message`, en plus
+de l'écrire dans sa réponse : le pilote ne lit pas l'écran de ses enfants. Un **NO GO** reste dans la même
 session — correction, puis un nouveau « Livré ». Une **nouvelle demande**, même petite, même pendant une
 recette, ouvre une nouvelle session : la session le dit en une ligne et ne la traite pas.
 
@@ -278,7 +301,10 @@ Deux exceptions, et seulement deux :
   squasher sa PR (D24) ;
 - sauter les contrôles en mode « direct en prod » : « direct » saute la recette, pas la CI ;
 - continuer sur un fichier structurel sans avoir posé la ligne de réserve du § 1 ;
-- terminer dans un autre état que Livré, Fermé ou Arrêté ;
+- terminer dans un autre état que Livré, Fermé ou Arrêté, ou finir un tour sans étape suivante lancée
+  ni message envoyé (au pilote pour une session enfant, § 5) ;
+- modifier un fichier par un script shell, ou enchaîner `git add`, `git commit` et `git push` dans une
+  seule commande (§ 3 bis) ;
 - commencer le code d'une carte Notion sans l'avoir passée en `On going`, ou dire « Fermé » sans avoir
   passé la carte en `Released` — ou, sans carte, sans avoir créé la carte de trace (§ 1 bis) ;
 - corriger un bug sans preuve du symptôme et de la cause (§ 2 bis), même en mode « incident ».

@@ -20,7 +20,78 @@
       "Agent",
       "Bash(node /home/user/dev_ops/scripts/gcp-read.mjs:*)",
       "Bash(node /home/user/dev_ops/scripts/gcp-staging.mjs:*)",
-      "Bash(node /home/user/elsee_functions_V2/functions/tools/gcp-debug.js:*)"
+      "Bash(node /home/user/elsee_functions_V2/functions/tools/gcp-debug.js:*)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit -F *)",
+      "Bash(git commit -m *)",
+      "Bash(git fetch)",
+      "Bash(git fetch origin)",
+      "Bash(git fetch origin *)",
+      "Bash(git rebase origin/main)",
+      "Bash(git rebase --continue)",
+      "Bash(git rebase --abort)",
+      "Bash(git push -u origin claude/*)",
+      "Bash(git push -u origin feat/*)",
+      "Bash(git push -u origin fix/*)",
+      "Bash(git push -u origin chore/*)",
+      "Bash(git push -u origin hotfix/*)",
+      "Bash(flutter analyze)",
+      "Bash(flutter analyze *)",
+      "Bash(flutter test)",
+      "Bash(flutter test *)",
+      "Bash(flutter build web)",
+      "Bash(flutter build web *)",
+      "Bash(npm test)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(node --check *)",
+      "Bash(bash scripts/ci/check-pinned-actions.sh)",
+      "Bash(bash scripts/ci/check-secrets-scope.sh)",
+      "Bash(bash scripts/ci/check-js-syntax.sh)",
+      "Bash(bash scripts/ci/check-bundle-budget.sh)",
+      "Bash(bash scripts/ci/check-no-odoo-in-client.sh)",
+      "Bash(node scripts/ci/check-webflow.mjs)"
+    ],
+    "deny": [
+      "Bash(git *push * main)",
+      "Bash(git *push * main *)",
+      "Bash(git *push *:main)",
+      "Bash(git *push *:main *)",
+      "Bash(git *push * prod)",
+      "Bash(git *push * prod *)",
+      "Bash(git *push *:prod)",
+      "Bash(git *push *:prod *)",
+      "Bash(git *push * prod/*)",
+      "Bash(git *push *:prod/*)",
+      "Bash(git *push * flutterflow)",
+      "Bash(git *push * flutterflow *)",
+      "Bash(git *push *:flutterflow)",
+      "Bash(git *push *:flutterflow *)",
+      "Bash(git *push * release/*)",
+      "Bash(git *push *:release/*)",
+      "Bash(git *push *refs/*)",
+      "Bash(git *push * --force)",
+      "Bash(git *push * --force *)",
+      "Bash(git *push * -f)",
+      "Bash(git *push * -f *)",
+      "Bash(git *push *+*)",
+      "Bash(git *push * --all*)",
+      "Bash(git *push * --mirror*)",
+      "Bash(git *push * --tags*)",
+      "Bash(git *push * --delete*)",
+      "Bash(git *push * -d)",
+      "Bash(git *push * -d *)",
+      "Bash(git *push * :*)",
+      "Bash(git * --output*)",
+      "Bash(git * --ext-diff*)",
+      "Bash(node --check -*)",
+      "Bash(node --check * -*)"
     ]
   },
   "hooks": {
@@ -32,6 +103,18 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-start.sh\"",
             "timeout": 180
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/garde-git-push.py\"",
+            "timeout": 10
           }
         ]
       }

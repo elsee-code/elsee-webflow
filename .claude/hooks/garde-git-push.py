@@ -7,9 +7,11 @@ Les règles `deny` de settings.json comparent du texte : `git push origin 'main'
 - un push sans destination quand la branche courante, ou sa destination de push, est l'une d'elles ;
 - toute option de `push` hors d'une liste fermée (git accepte `--forc` pour `--force`) : `--force`, `-f`,
   `+refspec`, `--all`, `--mirror`, `--tags`, `--delete`, `:branche` sont donc refusés ;
-- un alias git qui pousse, un `-c` ou un `git config` qui touche aux alias, au push ou aux URL ;
-- une variable `GIT_*` posée dans la commande (configuration injectée), une option globale de git hors
-  d'une liste fermée (`--git-dir`, `--config-env`…) ;
+- toute sous-commande git qui n'est pas une commande de git (un alias, d'où qu'il vienne) ;
+- un `-c` hors d'une liste fermée de clés, un `git config` qui écrit un alias, un réglage de push, de
+  distant, d'inclusion, `core.*` ou `credential.*` ;
+- un nom `GIT_*` dans la commande (configuration injectée par l'environnement), `source` ou `.`, une
+  option globale de git hors d'une liste fermée (`--git-dir`, `--config-env`…) ;
 - un `git push` imbriqué (`$(…)`, `xargs`, `eval`), une commande illisible ou une destination calculée.
 `--force-with-lease` sur une branche de travail reste permis : c'est la suite d'un rebase.
 Tout le reste passe au circuit normal des autorisations (le hook ne donne jamais d'accord).
@@ -28,12 +30,19 @@ OPTIONS_PUSH_PERMISES = {"--set-upstream", "--dry-run", "--no-verify", "--verbos
 COURTES_PUSH_PERMISES = set("unvq")
 OPTIONS_GLOBALES_PERMISES = {"--no-pager", "-P", "-p", "--paginate", "--no-optional-locks", "--literal-pathspecs",
                              "--version", "--help"}
-# Sous-commandes qu'un alias ne peut pas masquer (git ignore un alias qui porte le nom d'une commande).
+# Sous-commandes courantes, reconnues sans appeler git ; les autres sont vérifiées contre
+# `git --list-cmds=main`. Un alias n'y figure jamais : il est refusé, d'où qu'il vienne.
 INTEGREES = {"status", "diff", "log", "add", "commit", "fetch", "rebase", "switch", "checkout", "branch", "show",
              "rev-parse", "restore", "stash", "merge", "pull", "remote", "ls-remote", "tag", "reset", "init",
              "clone", "cherry-pick", "grep", "blame", "ls-files", "symbolic-ref", "worktree", "rm", "mv",
-             "describe", "shortlog", "reflog", "cat-file", "rev-list", "merge-base", "help", "version"}
-CONFIG_SENSIBLE = re.compile(r"^(alias\.|push\.|url\.|remote\..*\.(push|pushurl)$)", re.IGNORECASE)
+             "describe", "shortlog", "reflog", "cat-file", "rev-list", "merge-base", "help", "version", "push",
+             "config"}
+# `-c` : liste fermée de clés sans effet sur ce qui est poussé ni sur le programme lancé.
+CLE_C_PERMISE = re.compile(r"^(user\.[a-z]+|color\..*|advice\..*|commit\.gpgsign|core\.quotepath|safe\.directory|"
+                           r"init\.defaultbranch)$", re.IGNORECASE)
+# `git config` : écritures refusées sur ce qui peut changer ce que pousse git, ou lancer un programme.
+CONFIG_SENSIBLE = re.compile(r"^(alias\.|push\.|url\.|include\.|includeif\.|remote\.|branch\..*\.(remote|merge|"
+                             r"pushremote)$|core\.|credential\.)", re.IGNORECASE)
 OPERATEURS = {"&&", "||", ";", "|", "|&", "&", "(", ")", "\n"}
 PONCTUATION = ";&|()"
 
@@ -95,8 +104,8 @@ def verifier_git(mots, dossier):
         if mots[i] in ("-C", "-c") and i + 1 < len(mots):
             if mots[i] == "-C":
                 dossier = mots[i + 1]
-            if mots[i] == "-c" and CONFIG_SENSIBLE.match(mots[i + 1].split("=")[0]):
-                refuser(f"réglage `-c {mots[i + 1]}` qui peut changer ce que pousse git")
+            if mots[i] == "-c" and not CLE_C_PERMISE.match(mots[i + 1].split("=")[0]):
+                refuser(f"réglage `-c {mots[i + 1]}` hors de la liste permise")
             i += 2
         elif mots[i] in OPTIONS_GLOBALES_PERMISES:
             i += 1
@@ -111,8 +120,8 @@ def verifier_git(mots, dossier):
             refuser("écriture d'un alias ou d'un réglage de push dans la configuration git")
     elif sous_commande == "push":
         verifier_push(args, dossier)
-    elif sous_commande not in INTEGREES and "push" in git_lire(dossier, "config", "--get", f"alias.{sous_commande}"):
-        refuser(f"alias git `{sous_commande}` qui pousse")
+    elif sous_commande not in INTEGREES and sous_commande not in git_lire(dossier, "--list-cmds=main").split():
+        refuser(f"sous-commande git `{sous_commande}` inconnue (un alias peut pousser)")
 
 
 def verifier_push(args, dossier):
@@ -159,12 +168,16 @@ def examiner(commande, dossier):
     # Une variable GIT_* (GIT_CONFIG_COUNT, GIT_CONFIG_KEY_0, GIT_DIR…) injecte un alias, un réglage de
     # push ou un autre dépôt sans passer par la ligne de commande : refusée, qu'elle soit posée devant la
     # commande, après `env` ou par `export`.
+    # Le nom suffit (`read GIT_X`, `printf -v GIT_X`, `export GIT_X`, `${GIT_X}`) ; `source` aussi, qui
+    # peut tout poser sans que le nom paraisse.
     for mots in morceaux:
-        affectation = next((m for m in mots if re.fullmatch(r"GIT_[A-Za-z0-9_]*=.*", m)), None)
-        if affectation:
-            refuser(f"variable `{affectation.split('=')[0]}` posée dans une commande git")
+        nom = next((t.group(0) for m in mots for t in [re.search(r"GIT_[A-Za-z0-9_]+", m)] if t), None)
+        if nom:
+            refuser(f"variable `{nom}` nommée dans une commande git")
+        if mots and mots[0] in ("source", "."):
+            refuser(f"`{mots[0]}` dans une commande git")
     for mots in morceaux:
-        while mots and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", mots[0])
+        while mots and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*\+?=.*", mots[0])
                         or mots[0] in ("command", "builtin", "nohup", "time", "env", "timeout", "exec",
                                        "if", "then", "else", "elif", "do", "while", "until", "{", "!")):
             mots = mots[1:]  # VAR=valeur git push ..., env git push ..., then git push ...

@@ -8,6 +8,8 @@ Les règles `deny` de settings.json comparent du texte : `git push origin 'main'
 - toute option de `push` hors d'une liste fermée (git accepte `--forc` pour `--force`) : `--force`, `-f`,
   `+refspec`, `--all`, `--mirror`, `--tags`, `--delete`, `:branche` sont donc refusés ;
 - un alias git qui pousse, un `-c` ou un `git config` qui touche aux alias, au push ou aux URL ;
+- une variable `GIT_*` posée dans la commande (configuration injectée), une option globale de git hors
+  d'une liste fermée (`--git-dir`, `--config-env`…) ;
 - un `git push` imbriqué (`$(…)`, `xargs`, `eval`), une commande illisible ou une destination calculée.
 `--force-with-lease` sur une branche de travail reste permis : c'est la suite d'un rebase.
 Tout le reste passe au circuit normal des autorisations (le hook ne donne jamais d'accord).
@@ -24,6 +26,8 @@ PREFIXES = ("release/", "prod/")
 OPTIONS_PUSH_PERMISES = {"--set-upstream", "--dry-run", "--no-verify", "--verbose", "--quiet", "--porcelain",
                          "--progress", "--no-progress", "--force-with-lease", "--atomic"}
 COURTES_PUSH_PERMISES = set("unvq")
+OPTIONS_GLOBALES_PERMISES = {"--no-pager", "-P", "-p", "--paginate", "--no-optional-locks", "--literal-pathspecs",
+                             "--version", "--help"}
 # Sous-commandes qu'un alias ne peut pas masquer (git ignore un alias qui porte le nom d'une commande).
 INTEGREES = {"status", "diff", "log", "add", "commit", "fetch", "rebase", "switch", "checkout", "branch", "show",
              "rev-parse", "restore", "stash", "merge", "pull", "remote", "ls-remote", "tag", "reset", "init",
@@ -84,16 +88,20 @@ def segments(commande):
 
 def verifier_git(mots, dossier):
     # mots : ce qui suit `git` ; options globales (-C, -c, --git-dir...) avant la sous-commande.
+    # Liste fermée d'options globales : `--git-dir`, `--work-tree`, `--config-env`… changeraient le
+    # dépôt ou la configuration que le hook lit, sans qu'il le voie.
     i = 0
     while i < len(mots) and mots[i].startswith("-"):
-        if mots[i] in ("-C", "-c", "--git-dir", "--work-tree", "--namespace") and i + 1 < len(mots):
+        if mots[i] in ("-C", "-c") and i + 1 < len(mots):
             if mots[i] == "-C":
                 dossier = mots[i + 1]
             if mots[i] == "-c" and CONFIG_SENSIBLE.match(mots[i + 1].split("=")[0]):
                 refuser(f"réglage `-c {mots[i + 1]}` qui peut changer ce que pousse git")
             i += 2
-        else:
+        elif mots[i] in OPTIONS_GLOBALES_PERMISES:
             i += 1
+        else:
+            refuser(f"option globale de git `{mots[i]}` hors de la liste permise")
     if i >= len(mots):
         return
     sous_commande, args = mots[i], mots[i + 1:]
@@ -148,6 +156,13 @@ def examiner(commande, dossier):
         if "push" in commande:
             refuser("commande illisible autour d'un `git push`")
         return
+    # Une variable GIT_* (GIT_CONFIG_COUNT, GIT_CONFIG_KEY_0, GIT_DIR…) injecte un alias, un réglage de
+    # push ou un autre dépôt sans passer par la ligne de commande : refusée, qu'elle soit posée devant la
+    # commande, après `env` ou par `export`.
+    for mots in morceaux:
+        affectation = next((m for m in mots if re.fullmatch(r"GIT_[A-Za-z0-9_]*=.*", m)), None)
+        if affectation:
+            refuser(f"variable `{affectation.split('=')[0]}` posée dans une commande git")
     for mots in morceaux:
         while mots and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", mots[0])
                         or mots[0] in ("command", "builtin", "nohup", "time", "env", "timeout", "exec",

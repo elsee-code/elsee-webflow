@@ -4,9 +4,11 @@
 Les règles `deny` de settings.json comparent du texte : `git push origin 'main'` ou une variable y
 échappent. Ce hook lit les arguments comme le shell les découpe et refuse, sans demander :
 - une destination `main`, `prod`, `flutterflow`, `release/*` ou `prod/*` (branche ou tag) ;
-- un push sans destination quand la branche courante est l'une d'elles ;
-- un push forcé (`--force`, `-f`, `+refspec`), `--all`, `--mirror`, `--tags`, `--delete`, `:branche` ;
-- une commande illisible ou une destination calculée (`$VAR`, `` ` ``) dans un `git push`.
+- un push sans destination quand la branche courante, ou sa destination de push, est l'une d'elles ;
+- toute option de `push` hors d'une liste fermée (git accepte `--forc` pour `--force`) : `--force`, `-f`,
+  `+refspec`, `--all`, `--mirror`, `--tags`, `--delete`, `:branche` sont donc refusés ;
+- un alias git qui pousse, un `-c` ou un `git config` qui touche aux alias, au push ou aux URL ;
+- un `git push` imbriqué (`$(…)`, `xargs`, `eval`), une commande illisible ou une destination calculée.
 `--force-with-lease` sur une branche de travail reste permis : c'est la suite d'un rebase.
 Tout le reste passe au circuit normal des autorisations (le hook ne donne jamais d'accord).
 """
@@ -18,7 +20,16 @@ import sys
 
 PROTEGEES = {"main", "prod", "flutterflow"}
 PREFIXES = ("release/", "prod/")
-OPTIONS_INTERDITES = {"--force", "--all", "--mirror", "--tags", "--delete", "--prune", "--force-if-includes"}
+# Liste fermée : git accepte les abréviations (`--forc` = `--force`), donc tout le reste est refusé.
+OPTIONS_PUSH_PERMISES = {"--set-upstream", "--dry-run", "--no-verify", "--verbose", "--quiet", "--porcelain",
+                         "--progress", "--no-progress", "--force-with-lease", "--atomic"}
+COURTES_PUSH_PERMISES = set("unvq")
+# Sous-commandes qu'un alias ne peut pas masquer (git ignore un alias qui porte le nom d'une commande).
+INTEGREES = {"status", "diff", "log", "add", "commit", "fetch", "rebase", "switch", "checkout", "branch", "show",
+             "rev-parse", "restore", "stash", "merge", "pull", "remote", "ls-remote", "tag", "reset", "init",
+             "clone", "cherry-pick", "grep", "blame", "ls-files", "symbolic-ref", "worktree", "rm", "mv",
+             "describe", "shortlog", "reflog", "cat-file", "rev-list", "merge-base", "help", "version"}
+CONFIG_SENSIBLE = re.compile(r"^(alias\.|push\.|url\.|remote\..*\.(push|pushurl)$)", re.IGNORECASE)
 OPERATEURS = {"&&", "||", ";", "|", "|&", "&", "(", ")", "\n"}
 PONCTUATION = ";&|()"
 
@@ -40,12 +51,15 @@ def protegee(nom):
     return nom in PROTEGEES or nom.startswith(PREFIXES)
 
 
-def branche_courante(dossier):
+def git_lire(dossier, *args):
     try:
-        return subprocess.run(["git", "-C", dossier, "symbolic-ref", "--short", "HEAD"],
-                              capture_output=True, text=True, timeout=5).stdout.strip()
+        return subprocess.run(["git", "-C", dossier, *args], capture_output=True, text=True, timeout=5).stdout.strip()
     except Exception:
         return ""
+
+
+def branche_courante(dossier):
+    return git_lire(dossier, "symbolic-ref", "--short", "HEAD")
 
 
 def segments(commande):
@@ -68,33 +82,49 @@ def segments(commande):
         yield courant
 
 
-def verifier_push(mots, dossier):
-    # mots : ce qui suit `git` ; options globales (-C, -c, --git-dir...) avant le sous-commande.
+def verifier_git(mots, dossier):
+    # mots : ce qui suit `git` ; options globales (-C, -c, --git-dir...) avant la sous-commande.
     i = 0
     while i < len(mots) and mots[i].startswith("-"):
         if mots[i] in ("-C", "-c", "--git-dir", "--work-tree", "--namespace") and i + 1 < len(mots):
             if mots[i] == "-C":
                 dossier = mots[i + 1]
+            if mots[i] == "-c" and CONFIG_SENSIBLE.match(mots[i + 1].split("=")[0]):
+                refuser(f"réglage `-c {mots[i + 1]}` qui peut changer ce que pousse git")
             i += 2
         else:
             i += 1
-    if i >= len(mots) or mots[i] != "push":
+    if i >= len(mots):
         return
+    sous_commande, args = mots[i], mots[i + 1:]
+    if sous_commande == "config":
+        lecture = any(a in ("--get", "--get-all", "--get-regexp", "--list", "-l") for a in args)
+        if not lecture and any(CONFIG_SENSIBLE.match(a) for a in args):
+            refuser("écriture d'un alias ou d'un réglage de push dans la configuration git")
+    elif sous_commande == "push":
+        verifier_push(args, dossier)
+    elif sous_commande not in INTEGREES and "push" in git_lire(dossier, "config", "--get", f"alias.{sous_commande}"):
+        refuser(f"alias git `{sous_commande}` qui pousse")
+
+
+def verifier_push(args, dossier):
     positionnels = []
-    for arg in mots[i + 1:]:
+    for arg in args:
         if arg.startswith("--"):
-            if arg.split("=")[0] in OPTIONS_INTERDITES:
-                refuser(f"option interdite `{arg}`")
+            if arg.split("=")[0] not in OPTIONS_PUSH_PERMISES:
+                refuser(f"option `{arg}` hors de la liste permise")
         elif arg.startswith("-") and len(arg) > 1:
-            if set(arg[1:]) & set("fd"):
-                refuser(f"option interdite `{arg}` (force ou suppression)")
+            if not set(arg[1:]) <= COURTES_PUSH_PERMISES:
+                refuser(f"option `{arg}` hors de la liste permise")
         else:
             positionnels.append(arg)
     refspecs = positionnels[1:]
     if not refspecs:
         courante = branche_courante(dossier)
-        if not courante or protegee(courante):
-            refuser(f"push sans destination depuis la branche `{courante or '?'}`")
+        # La destination réelle d'un push sans refspec : la branche amont de push, sans le nom du distant.
+        amont = git_lire(dossier, "rev-parse", "--abbrev-ref", "@{push}").partition("/")[2]
+        if not courante or protegee(courante) or (amont and protegee(amont)):
+            refuser(f"push sans destination depuis `{courante or '?'}` vers `{amont or courante or '?'}`")
         return
     for spec in refspecs:
         if any(c in spec for c in "$`"):
@@ -115,22 +145,27 @@ def examiner(commande, dossier):
     try:
         morceaux = list(segments(commande))
     except ValueError:
-        refuser("commande illisible autour d'un `git push`")
+        if "push" in commande:
+            refuser("commande illisible autour d'un `git push`")
+        return
     for mots in morceaux:
         while mots and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", mots[0])
-                        or mots[0] in ("command", "builtin", "nohup", "time", "env", "timeout")):
-            mots = mots[1:]  # VAR=valeur git push ..., env git push ...
+                        or mots[0] in ("command", "builtin", "nohup", "time", "env", "timeout", "exec",
+                                       "if", "then", "else", "elif", "do", "while", "until", "{", "!")):
+            mots = mots[1:]  # VAR=valeur git push ..., env git push ..., then git push ...
         if not mots:
             continue
         programme = mots[0].rsplit("/", 1)[-1]
+        drapeau_c = next((k for k, m in enumerate(mots[1:-1], 1) if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", m)), None)
         if programme == "git":
-            verifier_push(mots[1:], dossier)
-        elif programme in ("sh", "bash", "zsh") and "-c" in mots[1:-1]:
-            examiner(mots[mots.index("-c") + 1], dossier)
-        elif programme in ("eval", "xargs") and "push" in " ".join(mots):
-            refuser(f"`git push` passé par `{programme}`")
-        elif programme == "cd" and len(mots) > 1:
+            verifier_git(mots[1:], dossier)
+        elif programme in ("sh", "bash", "zsh", "dash") and drapeau_c:
+            examiner(mots[drapeau_c + 1], dossier)
+        elif programme in ("cd", "pushd") and len(mots) > 1:
             dossier = mots[1]
+        elif any(re.search(r"(^|[^\w.-])git$", m) and "push" in mots[k + 1:] for k, m in enumerate(mots[1:], 1)):
+            # `echo $(git push …)`, `xargs git push`, `eval git push` : un git imbriqué qu'on ne lit pas.
+            refuser(f"`git push` imbriqué dans `{programme}`")
 
 
 def main():
@@ -139,7 +174,7 @@ def main():
     except Exception:
         return
     commande = (entree.get("tool_input") or {}).get("command") or ""
-    if "push" in commande and "git" in commande:
+    if "git" in commande:  # pas seulement « push » : un alias git peut pousser sans le mot
         examiner(commande, entree.get("cwd") or ".")
 
 

@@ -4,17 +4,21 @@
 Les règles `deny` de settings.json comparent du texte : `git push origin 'main'` ou une variable y
 échappent. Ce hook lit les arguments comme le shell les découpe et refuse, sans demander :
 - une destination `main`, `prod`, `flutterflow`, `release/*` ou `prod/*` (branche ou tag) ;
-- un push sans destination quand la branche courante, ou sa destination de push, est l'une d'elles ;
+- un push sans destination nommée, ou vers un distant configuré en miroir ;
 - toute option de `push` hors d'une liste fermée (git accepte `--forc` pour `--force`) : `--force`, `-f`,
   `+refspec`, `--all`, `--mirror`, `--tags`, `--delete`, `:branche` sont donc refusés ;
-- toute sous-commande git qui n'est pas une commande de git (un alias, d'où qu'il vienne) ;
-- un `-c` hors d'une liste fermée de clés, un `git config` qui écrit un alias, un réglage de push, de
-  distant, d'inclusion, `core.*` ou `credential.*` ;
-- un nom `GIT_*` dans la commande (configuration injectée par l'environnement), `source` ou `.`, une
-  option globale de git hors d'une liste fermée (`--git-dir`, `--config-env`…) ;
-- un `git push` imbriqué (`$(…)`, `xargs`, `eval`), une commande illisible ou une destination calculée.
+- `send-pack`, `http-push`, `subtree` (ils poussent sans `push`) ; toute sous-commande qui n'est pas une
+  commande de git (un alias, d'où qu'il vienne) ; `git remote` autre que `show` et `get-url` ;
+- un `-c` ou un `git config` en écriture hors d'une liste fermée de clés, `git config --edit` ;
+- un nom `GIT_*` dans la commande (configuration injectée par l'environnement), `source`, `.`, `eval`,
+  une option globale de git hors d'une liste fermée (`--git-dir`, `--config-env`…) ;
+- un `git push` imbriqué (`$(…)`, `xargs`), une commande illisible ou une destination calculée.
 `--force-with-lease` sur une branche de travail reste permis : c'est la suite d'un rebase.
 Tout le reste passe au circuit normal des autorisations (le hook ne donne jamais d'accord).
+
+Limite assumée : le hook arrête l'erreur d'une session, pas une session décidée à pousser. Une commande
+qui exécute un programme arbitraire (un script écrit puis lancé, `rebase --exec`, `bisect run`…) lui
+échappe par construction. La frontière est la protection de branche côté GitHub.
 """
 import json
 import re
@@ -38,11 +42,13 @@ INTEGREES = {"status", "diff", "log", "add", "commit", "fetch", "rebase", "switc
              "describe", "shortlog", "reflog", "cat-file", "rev-list", "merge-base", "help", "version", "push",
              "config"}
 # `-c` : liste fermée de clés sans effet sur ce qui est poussé ni sur le programme lancé.
-CLE_C_PERMISE = re.compile(r"^(user\.[a-z]+|color\..*|advice\..*|commit\.gpgsign|core\.quotepath|safe\.directory|"
+CLE_C_PERMISE = re.compile(r"^(user\.[a-z]+|color\..*|advice\..*|core\.quotepath|safe\.directory|"
                            r"init\.defaultbranch)$", re.IGNORECASE)
-# `git config` : écritures refusées sur ce qui peut changer ce que pousse git, ou lancer un programme.
-CONFIG_SENSIBLE = re.compile(r"^(alias\.|push\.|url\.|include\.|includeif\.|remote\.|branch\..*\.(remote|merge|"
-                             r"pushremote)$|core\.|credential\.)", re.IGNORECASE)
+# `git config` en écriture : même liste fermée, plus `pull.rebase`. Une clé y est un mot qui contient un
+# point et ne commence pas par `-` (les valeurs n'en contiennent pas toujours, d'où la lecture par clé).
+CLE_CONFIG_PERMISE = re.compile(CLE_C_PERMISE.pattern[:-2] + r"|pull\.rebase)$", re.IGNORECASE)
+# Sous-commandes qui poussent sans s'appeler `push`.
+POUSSENT = {"send-pack", "http-push", "subtree"}
 OPERATEURS = {"&&", "||", ";", "|", "|&", "&", "(", ")", "\n"}
 PONCTUATION = ";&|()"
 
@@ -114,14 +120,34 @@ def verifier_git(mots, dossier):
     if i >= len(mots):
         return
     sous_commande, args = mots[i], mots[i + 1:]
+    positionnels = [a for a in args if not a.startswith("-")]
     if sous_commande == "config":
-        lecture = any(a in ("--get", "--get-all", "--get-regexp", "--list", "-l") for a in args)
-        if not lecture and any(CONFIG_SENSIBLE.match(a) for a in args):
-            refuser("écriture d'un alias ou d'un réglage de push dans la configuration git")
+        verifier_config(args, positionnels)
+    elif sous_commande == "remote":
+        if positionnels and positionnels[0] not in ("show", "get-url"):
+            refuser(f"`git remote {positionnels[0]}` : les distants ne se modifient pas depuis une session")
     elif sous_commande == "push":
         verifier_push(args, dossier)
+    elif sous_commande in POUSSENT:
+        refuser(f"`git {sous_commande}` pousse sans passer par `git push`")
     elif sous_commande not in INTEGREES and sous_commande not in git_lire(dossier, "--list-cmds=main").split():
         refuser(f"sous-commande git `{sous_commande}` inconnue (un alias peut pousser)")
+
+
+def verifier_config(args, positionnels):
+    # Ancienne forme `git config [--global] <clé> [<valeur>]`, nouvelle `git config set|unset <clé> …`.
+    if any(a in ("--edit", "-e") for a in args) or positionnels[:1] == ["edit"]:
+        refuser("`git config --edit` : écriture libre dans la configuration git")
+    if not positionnels or positionnels[0] in ("get", "list"):
+        return
+    nouvelle = positionnels[0] in ("set", "unset", "rename-section", "remove-section")
+    cle = positionnels[1] if nouvelle and len(positionnels) > 1 else positionnels[0]
+    ecriture = nouvelle or len(positionnels) > 1 or any(
+        a.split("=")[0] in ("--unset", "--unset-all", "--add", "--replace-all", "--rename-section",
+                            "--remove-section") for a in args)
+    lecture = any(a in ("--get", "--get-all", "--get-regexp", "--list", "-l") for a in args)
+    if ecriture and not lecture and not CLE_CONFIG_PERMISE.match(cle):
+        refuser(f"écriture de `{cle}` dans la configuration git, hors de la liste permise")
 
 
 def verifier_push(args, dossier):
@@ -137,12 +163,11 @@ def verifier_push(args, dossier):
             positionnels.append(arg)
     refspecs = positionnels[1:]
     if not refspecs:
-        courante = branche_courante(dossier)
-        # La destination réelle d'un push sans refspec : la branche amont de push, sans le nom du distant.
-        amont = git_lire(dossier, "rev-parse", "--abbrev-ref", "@{push}").partition("/")[2]
-        if not courante or protegee(courante) or (amont and protegee(amont)):
-            refuser(f"push sans destination depuis `{courante or '?'}` vers `{amont or courante or '?'}`")
-        return
+        # Sans destination, ce qui part dépend de la configuration et de l'environnement, que le hook ne
+        # voit pas en entier : le contrat demande `git push -u origin <branche>`, rien d'autre.
+        refuser("push sans destination nommée")
+    if git_lire(dossier, "config", "--get", f"remote.{positionnels[0]}.mirror").lower() == "true":
+        refuser(f"distant `{positionnels[0]}` configuré en miroir")
     for spec in refspecs:
         if any(c in spec for c in "$`"):
             refuser(f"destination calculée `{spec}`")
@@ -174,8 +199,6 @@ def examiner(commande, dossier):
         nom = next((t.group(0) for m in mots for t in [re.search(r"GIT_[A-Za-z0-9_]+", m)] if t), None)
         if nom:
             refuser(f"variable `{nom}` nommée dans une commande git")
-        if mots and mots[0] in ("source", "."):
-            refuser(f"`{mots[0]}` dans une commande git")
     for mots in morceaux:
         while mots and (re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*\+?=.*", mots[0])
                         or mots[0] in ("command", "builtin", "nohup", "time", "env", "timeout", "exec",
@@ -184,6 +207,8 @@ def examiner(commande, dossier):
         if not mots:
             continue
         programme = mots[0].rsplit("/", 1)[-1]
+        if programme in ("source", ".", "eval"):
+            refuser(f"`{programme}` dans une commande git")
         drapeau_c = next((k for k, m in enumerate(mots[1:-1], 1) if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", m)), None)
         if programme == "git":
             verifier_git(mots[1:], dossier)

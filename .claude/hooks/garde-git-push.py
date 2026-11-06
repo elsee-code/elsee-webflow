@@ -34,20 +34,28 @@ OPTIONS_PUSH_PERMISES = {"--set-upstream", "--dry-run", "--no-verify", "--verbos
 COURTES_PUSH_PERMISES = set("unvq")
 OPTIONS_GLOBALES_PERMISES = {"--no-pager", "-P", "-p", "--paginate", "--no-optional-locks", "--literal-pathspecs",
                              "--version", "--help"}
-# Sous-commandes courantes, reconnues sans appeler git ; les autres sont vérifiées contre
-# `git --list-cmds=main`. Un alias n'y figure jamais : il est refusé, d'où qu'il vienne.
+# Liste fermée des sous-commandes permises. Un alias n'y figure jamais (refusé, d'où qu'il vienne), ni
+# rien qui parle au distant hors `fetch`, `pull`, `ls-remote` et `push` (send-pack, receive-pack, remote-*…).
 INTEGREES = {"status", "diff", "log", "add", "commit", "fetch", "rebase", "switch", "checkout", "branch", "show",
              "rev-parse", "restore", "stash", "merge", "pull", "remote", "ls-remote", "tag", "reset", "init",
              "clone", "cherry-pick", "grep", "blame", "ls-files", "symbolic-ref", "worktree", "rm", "mv",
              "describe", "shortlog", "reflog", "cat-file", "rev-list", "merge-base", "help", "version", "push",
-             "config"}
+             "config", "am", "apply", "revert", "clean", "ls-tree", "show-ref", "for-each-ref",
+             "name-rev", "range-diff", "diff-tree", "diff-files", "diff-index", "check-ignore", "check-attr",
+             "hash-object", "update-index", "format-patch", "notes", "sparse-checkout", "gc", "whatchanged",
+             "cherry", "var", "archive", "maintenance"}  # ni `submodule` (foreach), ni `bisect` (run)
+# `git config` : options permises ; toute autre (dont celles qui prennent une valeur, `--file`, `--type`,
+# `--comment`…, et fausseraient la lecture de la clé) est refusée.
+OPTIONS_CONFIG_PERMISES = {"--global", "--local", "--get", "--get-all", "--get-regexp", "--list", "-l",
+                           "--unset", "--unset-all", "--add", "--replace-all", "--show-origin", "--show-scope",
+                           "--name-only", "--bool", "--int", "--null", "-z"}
 # `-c` : liste fermée de clés sans effet sur ce qui est poussé ni sur le programme lancé.
 CLE_C_PERMISE = re.compile(r"^(user\.[a-z]+|color\..*|advice\..*|core\.quotepath|safe\.directory|"
                            r"init\.defaultbranch)$", re.IGNORECASE)
 # `git config` en écriture : même liste fermée, plus `pull.rebase`. Une clé y est un mot qui contient un
 # point et ne commence pas par `-` (les valeurs n'en contiennent pas toujours, d'où la lecture par clé).
 CLE_CONFIG_PERMISE = re.compile(CLE_C_PERMISE.pattern[:-2] + r"|pull\.rebase)$", re.IGNORECASE)
-# Sous-commandes qui poussent sans s'appeler `push`.
+# Sous-commandes qui poussent sans s'appeler `push` : hors de INTEGREES, nommées pour un message clair.
 POUSSENT = {"send-pack", "http-push", "subtree"}
 OPERATEURS = {"&&", "||", ";", "|", "|&", "&", "(", ")", "\n"}
 PONCTUATION = ";&|()"
@@ -130,14 +138,17 @@ def verifier_git(mots, dossier):
         verifier_push(args, dossier)
     elif sous_commande in POUSSENT:
         refuser(f"`git {sous_commande}` pousse sans passer par `git push`")
-    elif sous_commande not in INTEGREES and sous_commande not in git_lire(dossier, "--list-cmds=main").split():
-        refuser(f"sous-commande git `{sous_commande}` inconnue (un alias peut pousser)")
+    elif sous_commande not in INTEGREES:
+        refuser(f"sous-commande git `{sous_commande}` hors de la liste permise (un alias peut pousser)")
 
 
 def verifier_config(args, positionnels):
     # Ancienne forme `git config [--global] <clé> [<valeur>]`, nouvelle `git config set|unset <clé> …`.
-    if any(a in ("--edit", "-e") for a in args) or positionnels[:1] == ["edit"]:
-        refuser("`git config --edit` : écriture libre dans la configuration git")
+    if positionnels[:1] == ["edit"]:
+        refuser("`git config edit` : écriture libre dans la configuration git")
+    option = next((a for a in args if a.startswith("-") and a not in OPTIONS_CONFIG_PERMISES), None)
+    if option:
+        refuser(f"option `{option}` de `git config` hors de la liste permise")
     if not positionnels or positionnels[0] in ("get", "list"):
         return
     nouvelle = positionnels[0] in ("set", "unset", "rename-section", "remove-section")

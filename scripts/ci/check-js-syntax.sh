@@ -22,4 +22,7 @@ done < <(git ls-files '*.js')
 # Le code à coller dans Webflow (webflow/) : balises du dépôt bien formées, scripts en ligne
 # qui se parsent, balises externes avec integrity.
 node scripts/ci/check-webflow.mjs || status=1
+
+# Ce que le formulaire des landings envoie dans `interests` (aucune adresse, 2026-11-16).
+node scripts/ci/test-formulaire-lp.mjs || status=1
 exit "$status"

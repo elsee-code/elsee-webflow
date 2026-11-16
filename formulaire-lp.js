@@ -25,6 +25,7 @@
   const config = (document.currentScript && document.currentScript.dataset) || {};
   const FORM_NAME = config.formName;
   const META = config.meta || '';
+  const ADRESSE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 
   document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('wf-form-Email-LP-Form');
@@ -53,6 +54,12 @@
 
     if (otherInput) {
       otherInput.style.display = 'none';
+      // Dans le Designer, le champ « Autre » porte name="email", comme le vrai champ e-mail : le
+      // remplissage automatique du navigateur y mettait l'adresse, qui partait ensuite dans
+      // `interests` (INTERET_LP dans Brevo, 312 contacts de la liste 67 au 2026-11-16). Renommé ici
+      // avant toute saisie, il n'est plus pris pour un champ e-mail.
+      otherInput.name = 'autre';
+      otherInput.setAttribute('autocomplete', 'off');
     }
 
     if (otherCheckbox && otherInput) {
@@ -99,7 +106,10 @@
         if (cb.id === 'Autre') {
           if (!otherInput) return;
           const otherVal = otherInput.value.trim();
-          if (otherVal) {
+          // Un soin n'a pas d'adresse : une réponse « Autre » qui en contient une (remplissage
+          // automatique d'une page restée ouverte avant ce correctif, ou saisie au mauvais endroit)
+          // ne part pas dans les centres d'intérêt.
+          if (otherVal && !ADRESSE.test(otherVal)) {
             selectedLabels.push(otherVal);
           }
         } else {

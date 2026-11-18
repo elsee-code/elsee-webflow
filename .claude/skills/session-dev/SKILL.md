@@ -59,8 +59,9 @@ colonnes sont la propriété **`Status`**. Relevé du schéma et pièges déjà 
 **La demande cite une carte** — un lien Notion ou un numéro `PRODUCT-<n>` (= `Task ID`) :
 
 - **à la prise**, avant la première ligne de code : chaque carte citée passe en **`On going`** ;
-- **à « Fermé »** (§ 5) : elle passe en **`Released`**, et son corps reçoit une ligne datée — la PR, le
-  commit ou le tag en prod, l'URL.
+- **à « Fermé »** (§ 5) : elle passe en **`Fixed`** si la demande corrige un bug, en **`Released`**
+  sinon, et son corps reçoit une ligne datée — la PR, le commit ou le tag en prod, l'URL. Un bug ne
+  finit jamais en `Released` (D48, amendement du 2026-11-18).
 
 « Livré » et « Arrêté » ne la déplacent pas : elle reste `On going` jusqu'à la fermeture.
 
@@ -260,8 +261,8 @@ le message « Fermé » porte le tableau **B** seul, sous le titre « À surveil
 - **`elsee_functions_v2`** et **`internal_tool`** : merger la PR (merge commit, comme les autres PR du
   dépôt). Le merge est le déploiement : attendre le run vert.
 
-Puis la carte Notion (§ 1 bis) : la carte citée passe en `Released`, ou la carte de trace est créée en
-`Fixed` (bug) ou `Released` (le reste). Puis le message **« Fermé »** : ce qui est en prod, le commit ou
+Puis la carte Notion (§ 1 bis) : la carte citée passe en `Fixed` (bug) ou `Released` (le reste), ou la
+carte de trace est créée avec le même statut. Puis le message **« Fermé »** : ce qui est en prod, le commit ou
 le tag, l'URL, le lien de la carte, et en « direct en prod » le tableau « À surveiller » (§ 4 B). La
 session est finie.
 
@@ -306,5 +307,6 @@ Deux exceptions, et seulement deux :
 - modifier un fichier par un script shell, ou enchaîner `git add`, `git commit` et `git push` dans une
   seule commande (§ 3 bis) ;
 - commencer le code d'une carte Notion sans l'avoir passée en `On going`, ou dire « Fermé » sans avoir
-  passé la carte en `Released` — ou, sans carte, sans avoir créé la carte de trace (§ 1 bis) ;
+  passé la carte en `Fixed` (bug) ou `Released` (le reste) — ou, sans carte, sans avoir créé la carte de
+  trace (§ 1 bis) ; passer en `Released` la carte d'un bug ;
 - corriger un bug sans preuve du symptôme et de la cause (§ 2 bis), même en mode « incident ».

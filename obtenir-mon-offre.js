@@ -32,6 +32,16 @@
       ? 'https://europe-west1-appelsee-staging.cloudfunctions.net/leadWebflow'
       : 'https://europe-west1-appelsee-2k24.cloudfunctions.net/leadWebflow';
 
+    // Safari lève SecurityError sur localStorage quand le stockage est bloqué : la provenance
+    // devient vide, l'envoi continue.
+    const lireStockage = (cle) => {
+      try {
+        return localStorage.getItem(cle);
+      } catch (e) {
+        return null;
+      }
+    };
+
     const getUrlParams = () => {
       const params = new URLSearchParams(window.location.search);
       const sourceUrl = params.get('url');
@@ -280,42 +290,37 @@
             `&lastname=${encodeURIComponent(lastName || '')}` +
             `&allPersona=${encodeURIComponent(interests || '')}`;
 
-          const firstSource   = localStorage.getItem('first_source') || "";
-          const sessionSource = localStorage.getItem('session_source')
-                              || localStorage.getItem('last_touch_url')
+          const firstSource   = lireStockage('first_source') || "";
+          const sessionSource = lireStockage('session_source')
+                              || lireStockage('last_touch_url')
                               || window.location.href;
 
-          Promise.all([
-            fetch("https://api.ipify.org?format=json").then(res => res.json()),
-          ])
-          .then(([ipData]) => {
-            const user_agent = navigator.userAgent;
-            const ip = ipData.ip;
-
-            fetch(LEAD_WEBHOOK_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                persona,
-                abonnement: budget,
-                email,
-                firstname: firstName,
-                lastname: lastName,
-                url: sourceUrl,
-                first_source: firstSource,
-                session_source: sessionSource,
-                phone,
-                interest: interests,
-                destination: makeDestination,
-                formName: "mainForm",
-                ip,
-                user_agent,
-                consent
-              })
+          // Plus d'appel à api.ipify.org avant l'envoi (2026-11-23) : sans .catch, un bloqueur qui
+          // le refusait (Firefox, Brave, uBlock) arrêtait tout, ni lead envoyé ni redirection
+          // (24 sessions en 30 jours, erreurs PostHog « Failed to fetch » / « Load failed »).
+          // leadWebflow ne lit pas l'IP (elsee_functions_v2, webLead.ts, parseWebLead).
+          fetch(LEAD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              persona,
+              abonnement: budget,
+              email,
+              firstname: firstName,
+              lastname: lastName,
+              url: sourceUrl,
+              first_source: firstSource,
+              session_source: sessionSource,
+              phone,
+              interest: interests,
+              destination: makeDestination,
+              formName: "mainForm",
+              user_agent: navigator.userAgent,
+              consent
             })
-            .then(() => window.location.assign(redirect))
-            .catch(() => window.location.assign(redirect));
-          });
+          })
+          .then(() => window.location.assign(redirect))
+          .catch(() => window.location.assign(redirect));
         }
       });
     };

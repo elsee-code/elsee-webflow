@@ -25,4 +25,10 @@ node scripts/ci/check-webflow.mjs || status=1
 
 # Ce que le formulaire des landings envoie dans `interests` (aucune adresse, 2026-11-16).
 node scripts/ci/test-formulaire-lp.mjs || status=1
+
+# Le formulaire principal envoie toujours le lead, puis redirige (2026-11-23).
+node scripts/ci/test-obtenir-mon-offre.mjs || status=1
+
+# Compte à rebours de l'accueil et carrousel de /reseau-elsee sans erreur (2026-11-23).
+node scripts/ci/test-accueil-et-carrousel.mjs || status=1
 exit "$status"

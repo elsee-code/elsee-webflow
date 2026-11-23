@@ -95,7 +95,16 @@
       updateDots();
     }
 
+    // L'index ne sort jamais de la piste. Le défilement automatique peut avancer sans que
+    // transitionend arrive (carrousel hors écran ou masqué) : `slides[currentIndex]` valait
+    // undefined et levait « reading 'classList' » (PostHog, 2026-10-29 → 2026-11-21).
     function nextSlide() {
+      if (currentIndex >= slides.length - 1) {
+        currentIndex = 1;
+        updatePosition(false);
+        updateDots();
+        return;
+      }
       currentIndex++;
       updatePosition(true);
     }
@@ -104,16 +113,17 @@
     LOOP CORRECTION
     ------------------------- */
 
-    track.addEventListener('transitionend', () => {
-      if (slides[currentIndex].classList.contains('is-clone')) {
-        if (currentIndex === slides.length - 1) {
-          currentIndex = 1;
-        }
+    // Les clones sont en position 0 et slides.length - 1 : sur un clone, on saute sans
+    // animation vers la vraie diapositive.
+    track.addEventListener('transitionend', (e) => {
+      // Les transitions des éléments d'une diapositive remontent jusqu'ici : on les ignore.
+      if (e.target !== track) return;
 
-        if (currentIndex === 0) {
-          currentIndex = slides.length - 2;
-        }
-
+      if (currentIndex >= slides.length - 1) {
+        currentIndex = 1;
+        updatePosition(false);
+      } else if (currentIndex <= 0) {
+        currentIndex = slides.length - 2;
         updatePosition(false);
       }
 

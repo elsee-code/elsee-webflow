@@ -52,6 +52,10 @@
       return;
     }
 
+    // Déclaré avant le premier appel : la date étant passée, ce premier appel arrête l'intervalle,
+    // et un `const timer` déclaré après levait « Cannot access 'timer' before initialization ».
+    let timer = null;
+
     function updateCountdown() {
       const now  = new Date().getTime();
       const diff = targetDate.getTime() - now;
@@ -80,7 +84,9 @@
 
     // Premier affichage immédiat
     updateCountdown();
-    // Mise à jour toutes les secondes
-    const timer = setInterval(updateCountdown, 1000);
+    // Mise à jour toutes les secondes, seulement s'il reste du temps
+    if (targetDate.getTime() > Date.now()) {
+      timer = setInterval(updateCountdown, 1000);
+    }
   });
 })();

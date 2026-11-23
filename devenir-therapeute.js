@@ -14,6 +14,9 @@
 //      quand la case « ma spécialité n'est pas dans la liste » est cochée. L'écouteur est en
 //      capture sur document et arrête l'événement : le traitement de formulaire Webflow ne
 //      part pas.
+// Ajouté :
+//   4. l'ancre #eligibilite (lien du menu du site) ouvre la popin d'éligibilité en cliquant le
+//      bouton « Vérifier mon éligibilité » de la section #eligibilite (ID posé dans Webflow).
 
 (function () {
   if (window.__elseeDevenirTherapeute) return;
@@ -263,5 +266,48 @@
         window.location.href = REDIRECT;
       }
     }, true);
+  });
+
+  // 4. Popin d'éligibilité ouverte par l'ancre #eligibilite (menu du site, carte « Vérifier mon
+  // éligibilité »). La popin (.jobvalidation) s'ouvre par une interaction Webflow au clic sur un
+  // bouton .thpmainctanav : on clique celui de la section #eligibilite, à l'arrivée sur la page
+  // et quand un lien de la page vise l'ancre (pas de rechargement, donc pas d'autre signal).
+  const ANCRE_ELIGIBILITE = "#eligibilite";
+
+  function popinOuverte() {
+    const popin = document.querySelector(".jobvalidation");
+    return !!popin && getComputedStyle(popin).display !== "none";
+  }
+
+  // À l'arrivée sur la page, l'interaction Webflow du bouton peut ne pas être encore branchée :
+  // on reclique toutes les 200 ms, au plus 15 fois, et on s'arrête dès que la popin est visible
+  // (un clic de plus la refermerait si l'interaction est une bascule).
+  function ouvrirEligibilite(essais) {
+    if (popinOuverte()) return;
+    const bouton =
+      document.querySelector(ANCRE_ELIGIBILITE + " .thpmainctanav") ||
+      document.querySelector(".thpmainctanav");
+    if (!bouton) return;
+    // Le bouton a href="#" : sans ce frein, le clic ramènerait la page en haut, derrière la popin.
+    bouton.addEventListener("click", function (e) { e.preventDefault(); }, { once: true });
+    bouton.click();
+    if (essais > 1) setTimeout(function () { ouvrirEligibilite(essais - 1); }, 200);
+  }
+
+  window.Webflow = window.Webflow || [];
+  window.Webflow.push(function () {
+    if (window.location.hash === ANCRE_ELIGIBILITE) ouvrirEligibilite(15);
+  });
+
+  document.addEventListener("click", function (e) {
+    const lien = e.target.closest && e.target.closest('a[href*="' + ANCRE_ELIGIBILITE + '"]');
+    if (!lien || lien.hash !== ANCRE_ELIGIBILITE || lien.pathname !== window.location.pathname) return;
+    e.preventDefault();
+    history.replaceState(null, "", ANCRE_ELIGIBILITE);
+    ouvrirEligibilite();
+  });
+
+  window.addEventListener("hashchange", function () {
+    if (window.location.hash === ANCRE_ELIGIBILITE) ouvrirEligibilite();
   });
 })();

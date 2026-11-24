@@ -9,11 +9,15 @@
 //    Dès qu'on quitte le haut de la page, il prend la classe is-scrolled (fond vert foncé).
 //    En descendant, la rangée du haut (.topbar) prend is-hidden et se replie ; en remontant,
 //    elle revient, sur le fond vert. Retour en haut de page : en-tête transparent.
+//    Si le fond sous l'en-tête est trop clair en haut de page, l'en-tête prend is-fond-clair
+//    (même fond vert) dès le départ. Détection automatique sur les fonds de couleur unie ; pour
+//    une photo ou une vidéo, poser data-entete="vert" (ou "transparent") sur la section dans
+//    Webflow. Console : window.elseeFondClairSousEntete() donne le verdict de la page.
 // 2. Tiroir (≤ 991 px). Le burger pose is-open sur l'en-tête, .topbar, chaque .mm_dropdown et
 //    les barres du burger. Ces styles sont des combos Webflow « is-open » réglés sur Tablet :
 //    sur desktop, la classe ne change rien.
 //
-// Les combos is-open, is-scrolled et is-hidden n'ont aucun élément qui les porte dans le
+// Les combos is-open, is-scrolled, is-fond-clair et is-hidden n'ont aucun élément qui les porte dans le
 // Designer : ils n'existent que pour ce script. Ne pas les supprimer avec « Clean up ».
 //
 // Superposition : l'en-tête (z-index 2147483001 dans Webflow) passe devant la bannière cookies ;
@@ -30,6 +34,55 @@
   const DESKTOP = "(min-width: 992px)";
   const HAUT_DE_PAGE = 8; // px : en dessous, l'en-tête reste transparent
   const SEUIL = 6; // px : un mouvement plus petit ne change rien (évite le clignotement)
+  const SEUIL_CLAIR = 0.6; // luminance relative (0 noir, 1 blanc) au-dessus de laquelle un fond est clair
+
+  // --- Fond sous l'en-tête --------------------------------------------------
+  function luminance(couleur) {
+    const m = /rgba?\(([^)]+)\)/.exec(couleur || "");
+    if (!m) return null;
+    const v = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+    if (v.length > 3 && v[3] < 0.5) return null; // presque transparent : on regarde dessous
+    const lin = function (c) {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * lin(v[0]) + 0.7152 * lin(v[1]) + 0.0722 * lin(v[2]);
+  }
+
+  // Ce qu'il y a sous un point : "clair", "sombre", ou "inconnu" pour une photo, une vidéo ou un
+  // dégradé, qu'on ne sait pas juger (l'en-tête reste alors transparent).
+  function fondAuPoint(x, y, entete) {
+    const pile = document.elementsFromPoint(x, y);
+    for (let i = 0; i < pile.length; i++) {
+      const el = pile[i];
+      if (entete && entete.contains(el)) continue;
+      if (/^(img|video|picture|canvas|iframe|svg)$/i.test(el.tagName)) return "inconnu";
+      const style = getComputedStyle(el);
+      if (style.backgroundImage && style.backgroundImage !== "none") return "inconnu";
+      const l = luminance(style.backgroundColor);
+      if (l !== null) return l > SEUIL_CLAIR ? "clair" : "sombre";
+    }
+    return "clair"; // rien de coloré dessous : le fond blanc du navigateur
+  }
+
+  // true si, en haut de page, le fond sous l'en-tête est trop clair pour un en-tête transparent.
+  // Trois points sur la largeur, à mi-hauteur de l'en-tête ; clair s'il l'est à au moins deux.
+  // Un attribut data-entete sur la section sous l'en-tête (ou un parent, jusqu'à <body>) décide
+  // à la place : "vert" force le fond vert, "transparent" le refuse (photos, vidéos, erreurs).
+  function fondClairSousEntete(entete) {
+    const y = Math.max(1, Math.round((entete ? entete.getBoundingClientRect().height : 80) / 2));
+    const xs = [0.15, 0.5, 0.85].map(function (f) { return Math.round(window.innerWidth * f); });
+    for (let i = 0; i < xs.length; i++) {
+      const dessous = document.elementsFromPoint(xs[i], y).filter(function (el) {
+        return !(entete && entete.contains(el));
+      })[0];
+      const choix = dessous && dessous.closest("[data-entete]");
+      if (choix) return choix.getAttribute("data-entete") === "vert";
+    }
+    return xs.filter(function (x) { return fondAuPoint(x, y, entete) === "clair"; }).length >= 2;
+  }
+  // Pour le relevé des pages et le débogage dans la console.
+  window.elseeFondClairSousEntete = fondClairSousEntete;
 
   function initialiser() {
     const bouton = document.querySelector("[data-mm-burger]");
@@ -40,6 +93,25 @@
 
     const ouvert = () => bouton.getAttribute("aria-expanded") === "true";
 
+    // --- 0. Fond clair sous l'en-tête ----------------------------------------
+    // Mesuré en haut de page seulement (plus bas, c'est le contenu qui passe dessous), puis
+    // remesuré après le chargement complet et à chaque redimensionnement.
+    let fondMesure = false;
+    function mesurerFond() {
+      fondMesure = true;
+      entete.classList.toggle("is-fond-clair", fondClairSousEntete(entete));
+    }
+    function remesurerFond() {
+      fondMesure = false;
+      if (window.scrollY <= HAUT_DE_PAGE) mesurerFond();
+    }
+    window.addEventListener("load", remesurerFond);
+    let minuterieTaille = null;
+    window.addEventListener("resize", function () {
+      clearTimeout(minuterieTaille);
+      minuterieTaille = setTimeout(remesurerFond, 200);
+    });
+
     // --- 1. Défilement -------------------------------------------------------
     let dernier = window.scrollY;
     let enAttente = false;
@@ -47,6 +119,7 @@
     function surDefilement() {
       enAttente = false;
       const y = Math.max(0, window.scrollY);
+      if (y <= HAUT_DE_PAGE && !fondMesure) mesurerFond();
       entete.classList.toggle("is-scrolled", y > HAUT_DE_PAGE);
       if (ouvert() || !rangeeHaut) {
         dernier = y;

@@ -16,6 +16,9 @@
 // Les combos is-open, is-scrolled et is-hidden n'ont aucun élément qui les porte dans le
 // Designer : ils n'existent que pour ce script. Ne pas les supprimer avec « Clean up ».
 //
+// Superposition : l'en-tête (z-index 2147483001 dans Webflow) passe devant la bannière cookies ;
+// le chat Brevo est masqué tant que le tiroir est ouvert (classe elsee-menu-ouvert sur <html>).
+//
 // Accessibilité : aria-expanded et aria-label suivent l'état du tiroir ; Échap le ferme et
 // rend le focus au bouton ; un clic sur un lien le ferme ; la page derrière ne défile plus
 // pendant l'ouverture ; il se ferme seul si la fenêtre repasse en desktop.
@@ -65,7 +68,15 @@
     surDefilement();
 
     // --- 2. Tiroir mobile ----------------------------------------------------
+    // Le chat Brevo (#brevo-conversations, chargé hors de ce dépôt) a un z-index plus haut que
+    // tout : on le masque tant que le tiroir est ouvert. La bannière cookies, elle, passe sous
+    // l'en-tête par son z-index (réglé dans Webflow sur navbarContainer).
+    const style = document.createElement("style");
+    style.textContent = "html.elsee-menu-ouvert #brevo-conversations{display:none!important}";
+    document.head.appendChild(style);
+
     function basculer(ouvrir) {
+      document.documentElement.classList.toggle("elsee-menu-ouvert", ouvrir);
       const cibles = [entete].concat(
         Array.from(entete.querySelectorAll(".topbar, .mm_dropdown")),
         Array.from(bouton.querySelectorAll(".mm_burger_barre"))

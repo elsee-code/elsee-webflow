@@ -161,8 +161,15 @@
     // Le chat Brevo (#brevo-conversations, chargé hors de ce dépôt) a un z-index plus haut que
     // tout : on le masque tant que le tiroir est ouvert. La bannière cookies, elle, passe sous
     // l'en-tête par son z-index (réglé dans Webflow sur navbarContainer).
+    // Dans le tiroir, le chevron d'un onglet ouvert (.w--open, posé par Webflow) pointe vers le
+    // haut : Webflow ne sait pas styler un enfant selon l'état du menu déroulant.
     const style = document.createElement("style");
-    style.textContent = "html.elsee-menu-ouvert #brevo-conversations{display:none!important}";
+    style.textContent =
+      "html.elsee-menu-ouvert #brevo-conversations{display:none!important}" +
+      "@media (max-width:991px){" +
+      ".mm_dropdown .chevron_navbar{transition:transform 200ms ease}" +
+      ".mm_dropdown .w-dropdown-toggle.w--open .chevron_navbar{transform:rotate(180deg)}}" +
+      "@media (prefers-reduced-motion:reduce){.mm_dropdown .chevron_navbar{transition:none}}";
     document.head.appendChild(style);
 
     function basculer(ouvrir) {

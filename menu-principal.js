@@ -10,7 +10,8 @@
 //    En descendant, la rangée du haut (.topbar) prend is-hidden et se replie ; en remontant,
 //    elle revient, sur le fond vert. Retour en haut de page : en-tête transparent.
 //    Si le fond sous l'en-tête est trop clair en haut de page, l'en-tête prend is-fond-clair
-//    (même fond vert) dès le départ. Détection automatique sur les fonds de couleur unie ; pour
+//    (même fond vert) dès le départ. Détection automatique sur les fonds de couleur unie et les
+//    dégradés CSS (moyenne de leurs couleurs) ; pour
 //    une photo ou une vidéo, poser data-entete="vert" (ou "transparent") sur la section dans
 //    Webflow. Console : window.elseeFondClairSousEntete() donne le verdict de la page.
 // 2. Tiroir (≤ 991 px). Le burger pose is-open sur l'en-tête, .topbar, chaque .mm_dropdown et
@@ -49,8 +50,19 @@
     return 0.2126 * lin(v[0]) + 0.7152 * lin(v[1]) + 0.0722 * lin(v[2]);
   }
 
-  // Ce qu'il y a sous un point : "clair", "sombre", ou "inconnu" pour une photo, une vidéo ou un
-  // dégradé, qu'on ne sait pas juger (l'en-tête reste alors transparent).
+  // Luminance moyenne des couleurs d'un dégradé CSS (linear-, radial-, conic-gradient), sans les
+  // couleurs presque transparentes ; null s'il n'en reste aucune.
+  function luminanceDegrade(image) {
+    const couleurs = image.match(/rgba?\([^)]+\)/g) || [];
+    const valeurs = couleurs.map(luminance).filter(function (l) { return l !== null; });
+    if (!valeurs.length) return null;
+    return valeurs.reduce(function (a, b) { return a + b; }, 0) / valeurs.length;
+  }
+
+  // Ce qu'il y a sous un point : "clair", "sombre", ou "inconnu" pour une photo ou une vidéo,
+  // qu'on ne sait pas juger (l'en-tête reste alors transparent). Un dégradé CSS se juge par la
+  // moyenne de ses couleurs couvrantes, y compris quand il teinte une photo (héros des pages
+  // thématiques : « linear-gradient(…), url(…) ») ; une photo sans dégradé reste inconnue.
   function fondAuPoint(x, y, entete) {
     const pile = document.elementsFromPoint(x, y);
     for (let i = 0; i < pile.length; i++) {
@@ -58,7 +70,12 @@
       if (entete && entete.contains(el)) continue;
       if (/^(img|video|picture|canvas|iframe|svg)$/i.test(el.tagName)) return "inconnu";
       const style = getComputedStyle(el);
-      if (style.backgroundImage && style.backgroundImage !== "none") return "inconnu";
+      const image = style.backgroundImage;
+      if (image && image !== "none") {
+        const ld = luminanceDegrade(image);
+        if (ld !== null) return ld > SEUIL_CLAIR ? "clair" : "sombre";
+        if (/url\(/i.test(image)) return "inconnu";
+      }
       const l = luminance(style.backgroundColor);
       if (l !== null) return l > SEUIL_CLAIR ? "clair" : "sombre";
     }
